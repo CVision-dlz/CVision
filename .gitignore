@@ -18,9 +18,13 @@ __pycache__/
 *$py.class
 
 # Données locales (pour ne pas commit les CV de test sur GitHub)
-# On garde la structure mais on ignore les fichiers .txt personnels
-data/raw/*.txt
-data/processed/*.json
+# Ignorer tout le contenu des dossiers data
+data/raw/*
+data/processed/*
+
+# SAUF les fichiers .gitkeep (pour forcer Git à suivre les dossiers vides)
+!data/raw/.gitkeep
+!data/processed/.gitkeep
 
 # Logs
 *.log
