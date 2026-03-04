@@ -1,0 +1,26 @@
+# Environnement virtuel
+.venv/
+venv/
+ENV/
+
+# Configuration sensible (OpenAI keys, etc.)
+config/config.yaml
+config/prompt.txt
+.env
+
+# PyCharm / IDE
+.idea/
+*.iml
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Données locales (pour ne pas commit les CV de test sur GitHub)
+# On garde la structure mais on ignore les fichiers .txt personnels
+data/raw/*.txt
+data/processed/*.json
+
+# Logs
+*.log
