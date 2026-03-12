@@ -20,11 +20,11 @@ __pycache__/
 # Données locales (pour ne pas commit les CV de test sur GitHub)
 # Ignorer tout le contenu des dossiers data
 data/raw/*
-data/processed/*
+data/extracted/*
 
 # SAUF les fichiers .gitkeep (pour forcer Git à suivre les dossiers vides)
 !data/raw/.gitkeep
-!data/processed/.gitkeep
+!data/extracted/.gitkeep
 
 # Logs
 *.log

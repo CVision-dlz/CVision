@@ -20,7 +20,7 @@ for filename, cv_text in all_cvs.items():
     result_llm = extract_cv(cv_text, config)
 
     # sauvegarde du résultat dans data/processed/ avec le même nom mais en format .json
-    output_path = Path("data/processed/") / filename.replace(".txt", ".json")
+    output_path = Path("data/extracted/") / filename.replace(".txt", ".json")
     output_path.write_text(json.dumps(result_llm, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"Fichier {output_path} sauvegardé !")
