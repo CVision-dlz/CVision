@@ -1,35 +1,34 @@
 import json
-from datetime import date
+import re
 from pathlib import Path
 from groq import Groq
 
 def load_prompt():
-    """lit le fichier prompt.txt dans le dossier config et retourne son contenu"""
+    """Lit le fichier prompt.txt dans le dossier config et retourne son contenu"""
     return Path("config/prompt.txt").read_text(encoding="utf-8")
 
-
 def extract_cv(cv_text, config):
-
-    # création du client Groq avec notre clé API
+    # Création du client Groq avec notre clé API
     client = Groq(api_key=config["api"]["api_key"])
 
-    # injecte la date du jour et le texte du CV dans le prompt
-    prompt_date_cv = load_prompt().format(
-        today = date.today().isoformat(),       # la date du jour
-        cv_text = cv_text                       # le contenu brut du cv
-    )
+    # Injecte le texte du CV dans le prompt (plus besoin de la date)
+    prompt_content = load_prompt().replace("{cv_text}", cv_text)
 
-    # envoie le prompt au LLM et récupère la réponse
+    # Envoie le prompt au LLM et récupère la réponse
     response_llm = client.chat.completions.create(
-        model = config["api"]["model"],
+        model=config["api"]["model"],
         messages=[
-            {"role": "user", "content": prompt_date_cv}  # notre message au LLM
+            {"role": "user", "content": prompt_content}
         ],
         temperature=config["api"]["temperature"],
     )
 
-    # extrait le texte brut de la réponse et supprime les espaces inutiles
+    # Extrait le texte brut de la réponse
     raw = response_llm.choices[0].message.content.strip()
 
-    # convertit le texte JSON en dict Python et le retourne
+    # Sécurité : supprime les balises markdown si le LLM en a généré
+    raw = re.sub(r"^```json", "", raw, flags=re.MULTILINE)
+    raw = re.sub(r"^```", "", raw, flags=re.MULTILINE).strip()
+
+    # Convertit le texte JSON en dict Python et le retourne
     return json.loads(raw)
