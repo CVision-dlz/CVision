@@ -5,6 +5,7 @@ from datetime import datetime
 from core.loader import load_cvs_from_folder
 from core.analyzer import extract_cv
 from core.preprocessor import pre_process_cv, clean_cv_text_for_llm, compute_experience_metrics, score_education
+from core.json2csv import json2csv
 
 with open("config/config.yaml", "r", encoding="utf-8") as file:
     config = yaml.safe_load(file)
@@ -42,7 +43,7 @@ for filename, cv_text in all_cvs.items():
         education_data["years_since_graduation"] = pre_processed_data.get("years_since_graduation")
         education_data["education_score"] = score_education(education_data.get("degree"))
 
-    # 6. Assemblage final
+    # 6. Assemblage final en json
     cv_id = filename.replace(".txt", "")
     final_json = {
         "meta": {
@@ -61,8 +62,11 @@ for filename, cv_text in all_cvs.items():
         "certifications": pre_processed_data.get("certifications")
     }
 
-    output_path = Path("data/extracted") / filename.replace(".txt", ".json")
-    output_path.write_text(json.dumps(final_json, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"Fichier {output_path} sauvegardé avec succès !\n")
+    output_path_json = Path("data/extracted") / filename.replace(".txt", ".json")
+    output_path_json.write_text(json.dumps(final_json, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Fichier {output_path_json} sauvegardé avec succès en json !\n")
+
+# 7. Transformation JSON en CSV
+json2csv(input_path_json="data/extracted", output_path_csv="data/cv_dataset.csv")
 
 print("Tous les CVs ont été traités !")
