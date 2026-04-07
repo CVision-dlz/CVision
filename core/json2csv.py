@@ -35,12 +35,19 @@ def json2csv(input_path_json: str) -> pd.DataFrame:
             meta = cv.get("meta", {})
             education = cv.get("education", {})
 
+            # Calcul des statistiques de gap
+            gaps = cv.get("experience_gaps_months", [])
+            total_gap_months = sum(gap.get("duration_months", 0) for gap in gaps)
+            nb_gaps = len(gaps)
+
             row = {
                 "cv_id": meta.get("cv_id"),
                 "age": cv.get("age"),
                 "distance_ville_haute_km": cv.get("distance_ville_haute_km"),
                 "target_role": cv.get("target_role"),
                 "total_experience_years": cv.get("total_experience_years"),
+                "total_gap_months": total_gap_months,
+                "nb_gaps": nb_gaps,
                 "education_degree": education.get("degree"),
                 "education_field": education.get("field"),
                 "education_school": education.get("school"),
@@ -73,7 +80,7 @@ def json2csv(input_path_json: str) -> pd.DataFrame:
 
     df = pd.DataFrame(data)
 
-    cols_to_int = lang_cols + ["lang_other_score_sum"]
+    cols_to_int = lang_cols + ["lang_other_score_sum", "total_gap_months", "nb_gaps"]
     df[cols_to_int] = df[cols_to_int].astype(int)
 
     print(f"DataFrame créé avec succès ({len(data)} entrées)")
