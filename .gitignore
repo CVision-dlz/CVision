@@ -19,6 +19,8 @@ __pycache__/
 
 # Données locales (pour ne pas commit les CV de test sur GitHub)
 # Ignorer tout le contenu des dossiers data
+data/student_labels.csv
+data/cv_dataset.csv
 data/raw/*
 data/extracted/*
 
