@@ -88,9 +88,12 @@ def json2csv(input_path_json: str) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
+    import pandas as pd
+
     # Paramètres de test par défaut
     INPUT_FOLDER = "../data/extracted"
     OUTPUT_FILE = "../data/cv_dataset.csv"
+    LABELS_FILE = "../data/student_labels.csv"
 
     print(f"Lancement de json2csv en mode standalone sur le dossier : {INPUT_FOLDER}...")
 
@@ -98,7 +101,22 @@ if __name__ == "__main__":
         # Exécute la fonction
         df_result = json2csv(INPUT_FOLDER)
 
-        # Sauvegarde le résultat pour pouvoir vérifier
+        # Ajout de la fusion avec les labels pour le mode standalone
+        labels_path = Path(LABELS_FILE)
+        if labels_path.exists():
+            print(f"Fichier de labels trouvé. Fusion en cours...")
+            df_labels = pd.read_csv(labels_path)
+
+            # Renommage de la colonne pour correspondre au merge
+            df_labels = df_labels.rename(columns={'filename': 'cv_id'})
+            df_labels_subset = df_labels[['cv_id', 'passed_next_stage']]
+
+            # Fusion
+            df_result = pd.merge(df_result, df_labels_subset, on="cv_id", how="left")
+        else:
+            print(f"Avertissement : Fichier de labels introuvable sous '{LABELS_FILE}'. Fusion ignorée.")
+
+        # Sauvegarde le résultat
         df_result.to_csv(OUTPUT_FILE, sep=",", index=False, encoding="utf-8")
 
         print(f"\nAperçu des 5 premières lignes :\n{df_result.head()}")

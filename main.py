@@ -94,14 +94,17 @@ print("Fusion avec les labels (student_labels)...")
 try:
     df_labels = pd.read_csv("data/student_labels.csv")
 
-    # On ne garde que les colonnes nécessaires du deuxième fichier pour éviter les doublons
+    # Renommer 'filename' en 'cv_id' pour correspondre à df_cvs
+    df_labels = df_labels.rename(columns={'filename': 'cv_id'})
+
+    # On ne garde que les colonnes nécessaires
     df_labels_subset = df_labels[['cv_id', 'passed_next_stage']]
 
     # Fusion (Left join)
     df_final = pd.merge(df_cvs, df_labels_subset, on="cv_id", how="left")
 
-    # Sauvegarde en écrasant l'ancien dataset ou en créant un nouveau
-    df_final.to_csv("data/cv_dataset.csv", sep=";", index=False, encoding="utf-8")
+    # Sauvegarde en écrasant l'ancien dataset
+    df_final.to_csv("data/cv_dataset.csv", sep=",", index=False, encoding="utf-8")
     print("Fusion réussie ! Le fichier 'cv_dataset.csv' a été généré avec la colonne 'passed_next_stage'.")
 
 except Exception as e:
