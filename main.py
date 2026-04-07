@@ -11,9 +11,22 @@ from core.json2csv import json2csv
 with open("config/config.yaml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
+# Afin de revenir à un point dans les json
+RESUME_FROM = "cv_0200" # None par défaut si pas de json (ex de valeur : cv_0103)
+
 all_cvs = load_cvs_from_folder("data/raw")
 Path("data/extracted").mkdir(parents=True, exist_ok=True)
 Path("data/quarantaine").mkdir(parents=True, exist_ok=True)
+
+if RESUME_FROM:
+    keys = sorted(all_cvs.keys())
+    resume_key = next((k for k in keys if k.startswith(RESUME_FROM)), None)
+    if resume_key:
+        idx = keys.index(resume_key)
+        all_cvs = {k: all_cvs[k] for k in keys[idx:]}
+        print(f"Reprise à partir de {resume_key} ({len(all_cvs)} fichiers restants)")
+    else:
+        print(f"Avertissement : '{RESUME_FROM}' introuvable, traitement complet.")
 
 for filename, cv_text in all_cvs.items():
     print(f"Traitement de {filename}...")
@@ -63,12 +76,12 @@ for filename, cv_text in all_cvs.items():
 
     except json.JSONDecodeError:
         print(f"Erreur de décodage JSON pour {filename}. CV mis en quarantaine.")
-        quarantine_path = Path("data/quarantaine") / f"{filename}.txt"
+        quarantine_path = Path("data/quarantaine") / f"{filename}"
         quarantine_path.write_text(cv_text, encoding="utf-8")
         continue
     except Exception as e:
         print(f"Erreur inattendue lors du traitement de {filename} : {e}. CV mis en quarantaine.")
-        quarantine_path = Path("data/quarantaine") / f"{filename}.txt"
+        quarantine_path = Path("data/quarantaine") / f"{filename}"
         quarantine_path.write_text(cv_text, encoding="utf-8")
         continue
 
@@ -91,11 +104,6 @@ try:
     df_final.to_csv("data/cv_dataset.csv", sep=";", index=False, encoding="utf-8")
     print("Fusion réussie ! Le fichier 'cv_dataset.csv' a été généré avec la colonne 'passed_next_stage'.")
 
-except FileNotFoundError as e:
-    print(f"Erreur lors de la fusion : Fichier introuvable. {e}")
-except KeyError as e:
-    print(
-        f"Erreur lors de la fusion : Colonne manquante. Assurez-vous que les deux fichiers ont bien une colonne 'cv_id'. Détails : {e}")
 except Exception as e:
     print(f"Erreur inattendue lors de la fusion : {e}")
 

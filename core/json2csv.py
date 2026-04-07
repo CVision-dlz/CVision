@@ -85,5 +85,24 @@ def json2csv(input_path_json: str) -> pd.DataFrame:
 
     print(f"DataFrame créé avec succès ({len(data)} entrées)")
 
-    # On retourne le DataFrame au lieu de le sauvegarder
     return df
+
+
+if __name__ == "__main__":
+    # Paramètres de test par défaut
+    INPUT_FOLDER = "../data/extracted"
+    OUTPUT_FILE = "../data/cv_dataset.csv"
+
+    print(f"Lancement de json2csv en mode standalone sur le dossier : {INPUT_FOLDER}...")
+
+    if Path(INPUT_FOLDER).exists():
+        # Exécute la fonction
+        df_result = json2csv(INPUT_FOLDER)
+
+        # Sauvegarde le résultat pour pouvoir vérifier
+        df_result.to_csv(OUTPUT_FILE, sep=",", index=False, encoding="utf-8")
+
+        print(f"\nAperçu des 5 premières lignes :\n{df_result.head()}")
+        print(f"\nSuccès ! Le fichier de test a été sauvegardé sous : {OUTPUT_FILE}")
+    else:
+        print(f"\nErreur : Le dossier '{INPUT_FOLDER}' n'existe pas. Impossible de tester le script.")
