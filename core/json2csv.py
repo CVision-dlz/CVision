@@ -11,7 +11,6 @@ def json2csv(input_path_json: str) -> pd.DataFrame:
         "lang_fr": ["french", "français", "francais"],
         "lang_en": ["english", "anglais"],
         "lang_de": ["german", "allemand"],
-        "lang_lu": ["luxembourgish", "luxembourgeois", "letzebuergesch"],
         "lang_es": ["spanish", "espagnol"],
         "lang_it": ["italian", "italien"]
     }
