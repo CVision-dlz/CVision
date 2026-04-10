@@ -1,7 +1,7 @@
-from pathlib import Path
-import traceback
-import time
 import random
+import time
+import traceback
+from pathlib import Path
 
 from backend.core import pre_process_cv
 
@@ -84,6 +84,7 @@ def test_cv_processing(data_folder="data/raw", limit=None):
         for filename, err_msg, trace in errors[:5]:
             print(f"\nFichier : {filename}")
             print(f"Erreur  : {err_msg}")
+
 
 if __name__ == "__main__":
     # 💡 Astuce : Laisse limit=5 pour faire un essai rapide avant de lancer les 200.
