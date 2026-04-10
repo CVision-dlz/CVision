@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
+
 from core.loader import *
+
 
 class TestLoadCv(unittest.TestCase):
     @patch('core.loader.Path')

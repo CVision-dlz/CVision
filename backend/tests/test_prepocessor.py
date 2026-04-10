@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from datetime import datetime
+
 from core.preprocessor import *
-from core.preprocessor import (_split_sections, parse_date,  extract_email,
+from core.preprocessor import (_split_sections, parse_date, extract_email,
                                extract_skills, extract_languages, extract_certifications,
                                extract_graduation_year, _geocode_with_fallback)
 
@@ -14,6 +14,7 @@ class TestSplitSections(unittest.TestCase):
         self.assertEqual(sections["Name"], "John Doe")
         self.assertEqual(sections["Education"], "MIT")
         self.assertEqual(sections["Skills"], "Python, Java")
+
 
 class TestParseDate(unittest.TestCase):
     @patch('core.preprocessor.datetime')
@@ -31,12 +32,14 @@ class TestParseDate(unittest.TestCase):
         res = parse_date("InvalidDate")
         self.assertIsNone(res)
 
+
 class TestExtractEmail(unittest.TestCase):
     def test_extract_email_found(self):
         self.assertEqual(extract_email("Contact: test@email.com"), "test@email.com")
 
     def test_extract_email_not_found(self):
         self.assertIsNone(extract_email("No email here"))
+
 
 class TestComputeAge(unittest.TestCase):
     @patch('core.preprocessor.datetime')
@@ -45,6 +48,7 @@ class TestComputeAge(unittest.TestCase):
         dob = datetime(1996, 4, 9)
         self.assertEqual(compute_age(dob), 30)
 
+
 class TestGeocodeWithFallback(unittest.TestCase):
     @patch('core.preprocessor.geolocator.geocode')
     def test_geocode_exact_match(self, mock_geocode):
@@ -52,6 +56,7 @@ class TestGeocodeWithFallback(unittest.TestCase):
         res = _geocode_with_fallback("New York, USA")
         self.assertIsNotNone(res)
         mock_geocode.assert_called_once()
+
 
 class TestComputeDistanceKm(unittest.TestCase):
     @patch('core.preprocessor._geocode_with_fallback')
@@ -62,12 +67,14 @@ class TestComputeDistanceKm(unittest.TestCase):
         dist = compute_distance_km("Metz, France")
         self.assertEqual(dist, 50.12)
 
+
 class TestScoreLanguageLevel(unittest.TestCase):
     def test_score_valid(self):
         self.assertEqual(score_language_level("B2"), 4)
 
     def test_score_invalid(self):
         self.assertIsNone(score_language_level("XYZ"))
+
 
 class TestScoreEducation(unittest.TestCase):
     def test_score_master(self):
@@ -76,11 +83,13 @@ class TestScoreEducation(unittest.TestCase):
     def test_score_none(self):
         self.assertIsNone(score_education("Unknown Degree"))
 
+
 class TestExtractSkills(unittest.TestCase):
     def test_extract_skills(self):
         text = "Programming: Python, C++\nSoft: Leadership"
         skills = extract_skills(text)
         self.assertListEqual(skills, ["Python", "C++", "Leadership"])
+
 
 class TestExtractLanguages(unittest.TestCase):
     def test_extract_languages(self):
@@ -89,6 +98,7 @@ class TestExtractLanguages(unittest.TestCase):
         self.assertEqual(langs[0]["language"], "English")
         self.assertEqual(langs[0]["score"], 5)
 
+
 class TestExtractCertifications(unittest.TestCase):
     def test_extract_certifications(self):
         text = "AWS Certified - 2021\nScrum Master"
@@ -96,10 +106,12 @@ class TestExtractCertifications(unittest.TestCase):
         self.assertEqual(certs[0]["year"], 2021)
         self.assertIsNone(certs[1]["year"])
 
+
 class TestExtractGraduationYear(unittest.TestCase):
     def test_extract_graduation_year(self):
         text = "BSc 2018\nMSc 2020"
         self.assertEqual(extract_graduation_year(text), 2020)
+
 
 class TestCleanCvTextForLlm(unittest.TestCase):
     def test_clean_cv_text(self):
@@ -107,6 +119,7 @@ class TestCleanCvTextForLlm(unittest.TestCase):
         cleaned = clean_cv_text_for_llm(text)
         self.assertIn("Education:\nMIT", cleaned)
         self.assertNotIn("Skills:\nPython", cleaned)
+
 
 class TestComputeExperienceMetrics(unittest.TestCase):
     def test_compute_metrics(self):
@@ -117,6 +130,7 @@ class TestComputeExperienceMetrics(unittest.TestCase):
         metrics = compute_experience_metrics(exps)
         self.assertEqual(metrics["total_experience_years"], 2.0)
         self.assertEqual(metrics["experience_gaps_months"][0]["duration_months"], 5)
+
 
 class TestPreProcessCv(unittest.TestCase):
     @patch('core.preprocessor._split_sections')
@@ -133,6 +147,7 @@ class TestPreProcessCv(unittest.TestCase):
         self.assertIsNotNone(res["age"])
         self.assertEqual(res["distance_ville_haute_km"], 300.0)
         self.assertEqual(res["graduation_year"], 2015)
+
 
 if __name__ == '__main__':
     unittest.main()

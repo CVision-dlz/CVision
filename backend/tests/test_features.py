@@ -1,7 +1,8 @@
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
-import pandas as pd
+
 from core.features import *
+
 
 class TestCvToFeatures(unittest.TestCase):
     def test_cv_to_features_full(self):

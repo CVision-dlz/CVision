@@ -1,9 +1,10 @@
+import json
+import os
 import unittest
 from unittest.mock import patch, MagicMock
-import os
-import json
-from core.analyzer import _get_groq_config, extract_cv
+
 import core.analyzer as analyzer_module
+from core.analyzer import _get_groq_config, extract_cv
 
 
 class TestGetGroqConfig(unittest.TestCase):

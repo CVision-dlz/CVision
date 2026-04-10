@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
-import pandas as pd
+
 from core.json2csv import *
 
 
