@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copie tout le reste du projet dans le conteneur
-COPY .. .
+COPY . .
 
 # expose le port 8000 pour l'API
 EXPOSE 8000

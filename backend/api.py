@@ -7,7 +7,12 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.analyzer import extract_cv
-from core.json2csv import MAPPINGS, process_single_cv
+from core.json2csv import (
+    MAPPINGS,
+    process_single_cv,
+    REVERSE_MAPPING,
+    BASE_LANG_DICT
+)
 from core.preprocessor import (
     clean_cv_text_for_llm,
     compute_experience_metrics,
@@ -16,8 +21,8 @@ from core.preprocessor import (
 )
 
 # Constantes et chemins
-BASE_DIR = Path(__file__).resolve().parents[1]
-MODEL_PATH = BASE_DIR / "models" / "modele_classification_cv.joblib"
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "models" / "model_classification_cv.joblib"
 
 # Initialisation de l'application
 app = FastAPI(title="CVision API", version="1.0.1")
@@ -46,7 +51,11 @@ def apply_feature_engineering(cv_data: Dict[str, Any]) -> pd.DataFrame:
     Transforme le dictionnaire brut du CV en un DataFrame et
     calcule les variables dérivées nécessaires au modèle.
     """
-    flat_row_dict = process_single_cv(cv_data)
+    flat_row_dict = process_single_cv(
+        cv_data,
+        REVERSE_MAPPING,
+        BASE_LANG_DICT
+    )
     df = pd.DataFrame([flat_row_dict])
 
     # Typage des colonnes entières
@@ -123,12 +132,22 @@ async def process_cv(file: UploadFile = File(...)):
         })
 
     # 3. Assemblage du dictionnaire complet
+    cv_id = "api_input"
+
     result = {
-        **pre_data,
+        "meta": {
+            "cv_id": cv_id,
+        },
+        "age": pre_data.get("age"),
+        "distance_ville_haute_km": pre_data.get("distance_ville_haute_km"),
+        "target_role": pre_data.get("target_role"),
         "education": education_data,
         "experiences": exp_metrics["experiences"],
         "total_experience_years": exp_metrics["total_experience_years"],
         "experience_gaps_months": exp_metrics["experience_gaps_months"],
+        "skills": pre_data.get("skills"),
+        "languages": pre_data.get("languages"),
+        "certifications": pre_data.get("certifications"),
     }
 
     # 4. Feature Engineering et Prédiction

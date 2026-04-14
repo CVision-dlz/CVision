@@ -9,7 +9,7 @@ from groq import Groq
 _MD_FENCE_RE = re.compile(r"^```(?:json)?", re.MULTILINE)
 
 # Paramètres retry
-MAX_RETRIES = 99999      # Nombre maximum de tentatives
+MAX_RETRIES = 2          # Nombre maximum de tentatives
 RETRY_DELAY_SEC = 3      # Délai (secondes) entre chaque tentative
 SKIP_ON_FAILURE = False  # False → le fichier est ignoré (mis en quarantaine) après MAX_RETRIES échecs
                          # True → l'exception est propagée et arrête le pipeline
@@ -27,7 +27,7 @@ def _get_groq_config() -> dict:
         )
     return {
         "api_key":    api_key,
-        "model":      os.getenv("GROQ_MODEL", "llama3-70b-8192"),
+        "model":      os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
         "temperature": float(os.getenv("GROQ_TEMPERATURE", "0.0")),
     }
 
