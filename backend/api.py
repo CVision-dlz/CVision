@@ -12,7 +12,7 @@ from core.preprocessor import clean_cv_text_for_llm, compute_experience_metrics,
 
 _BASE = Path(__file__).parents[1]
 
-MODEL_PATH = _BASE / "models" / "model.pkl"
+MODEL_PATH = _BASE / "models" / "modele_classification_cv.joblib"
 
 app = FastAPI(title="CVision API", version="1.0.0")
 

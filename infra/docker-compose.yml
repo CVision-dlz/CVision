@@ -3,7 +3,7 @@ services:
   api:
     build:
       context: ../backend
-      dockerfile: ../infra/Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: cvision-api
     restart: always
     ports:
