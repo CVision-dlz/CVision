@@ -21,12 +21,39 @@ Lors de l'exploration, on constate que le jeu de données est fortement déséqu
 
 ---
 
-## 3. Création de Variables (Feature Engineering)
-Pour aider le modèle à capter de meilleurs signaux, le dataset original a été enrichi avec de nouvelles variables calculées (Feature Engineering) :
-* **`avg_gap_duration`** : Durée moyenne d'un trou dans le CV (`total_gap_months / (nb_gaps + 1)`).
-* **`gap_ratio`** : Le ratio de la carrière passée en période d'inactivité (trous par rapport au temps global d'expérience).
-* **`skills_count`** : Le nombre total de compétences listées.
-* **`certif_count`** et **`has_certif`** : Le nombre total de certifications, ainsi qu'une variable binaire (0 ou 1) indiquant simplement si le candidat possède au moins une certification.
+## 3. Variables utilisées
+
+### Variables brutes (issues du dataset original)
+
+| Variable | Type | Description |
+|---|---|---|
+| `age` | Numérique | Âge du candidat |
+| `distance_ville_haute_km` | Numérique | Distance entre le domicile et la ville du poste (en km) |
+| `total_experience_years` | Numérique | Nombre total d'années d'expérience |
+| `nb_gaps` | Numérique | Nombre de trous dans le parcours professionnel |
+| `total_gap_months` | Numérique | Durée totale des trous (en mois) — utilisée dans le feature engineering, non retenue directement en V4 |
+| `education_score` | Numérique | Score numérique associé au niveau de formation |
+| `lang_fr`, `lang_en`, `lang_de`, `lang_es`, `lang_it` | Binaire (0/1) | Indicateurs de maîtrise des langues |
+| `lang_other_score_sum` | Numérique | Score agrégé des autres langues déclarées |
+| `target_role` | Catégorielle | Poste visé par le candidat |
+| `education_degree` | Catégorielle | Diplôme obtenu |
+| `education_field` | Catégorielle | Domaine d'études |
+| `skills` | Texte | Liste des compétences déclarées (séparées par des virgules) |
+| `certifications` | Texte | Liste des certifications obtenues (séparées par des virgules) |
+
+### Variables créées par Feature Engineering
+
+Pour aider le modèle à capter de meilleurs signaux, le dataset original a été enrichi avec des variables calculées :
+
+| Variable | Formule | Objectif |
+|---|---|---|
+| `avg_gap_duration` | `total_gap_months / (nb_gaps + 1)` | Durée moyenne d'un trou. *Présente dans V1 uniquement — écartée en V4 car fortement colinéaire avec `nb_gaps` (VIF élevé).* |
+| `gap_ratio` | `total_gap_months / (total_experience_years * 12 + total_gap_months + 1)` | Part de la carrière passée en inactivité |
+| `skills_count` | Comptage des éléments de la liste `skills` | Nombre total de compétences déclarées |
+| `certif_count` | Comptage des éléments de la liste `certifications` | Nombre total de certifications obtenues |
+| `has_certif` | `1 si certif_count > 0, sinon 0` | Indicateur binaire : le candidat a-t-il au moins une certification ? |
+
+**Jeu de variables final retenu (V4) :** toutes les variables brutes sauf `total_gap_months` (remplacée par `gap_ratio`), et sans `avg_gap_duration` (colinéarité). Enrichi de `certif_count` et `has_certif`.
 
 ---
 
@@ -50,7 +77,38 @@ La préparation des données est gérée de manière très robuste par un `Colum
 ---
 
 ## 6. Choix du Modèle : Régression Logistique avec Validation Croisée
+
+### Pourquoi ce modèle ?
 Le modèle retenu est le **`LogisticRegressionCV`**. Les expériences menées dans la V1 du notebook ont montré que les modèles plus complexes (comme les Random Forest ou le Gradient Boosting) n'apportaient pas de meilleures performances et surapprenaient face au faible volume de données (200 lignes).
+
+La régression logistique est ici le point de départ naturel : interprétable, robuste sur peu de données, et compatible avec une pénalité L1 qui agit comme un filtre de variables automatique.
+
+### Paramètres du modèle
+
+| Paramètre | Valeur | Justification |
+|---|---|---|
+| `penalty` | `'l1'` | Sélectionne automatiquement les variables en mettant les coefficients inutiles à 0 (contrairement à L2 qui les réduit sans les éliminer) |
+| `solver` | `'liblinear'` | Seul solver compatible avec la pénalité L1 pour de petits datasets |
+| `Cs` | `10` | Grille de 10 valeurs de C testées en interne par `LogisticRegressionCV` |
+| `cv` | `StratifiedKFold(n_splits=5)` | Validation croisée interne stratifiée pour sélectionner le meilleur C |
+| `scoring` | `'roc_auc'` | Critère d'optimisation interne de C |
+| `class_weight` | `'balanced'` | Compense le déséquilibre de classes en pondérant automatiquement les observations |
+| `max_iter` | `1000` | Assure la convergence même sur des données difficiles |
+| `random_state` | `42` | Reproductibilité |
+
+### Gestion du déséquilibre : SMOTE
+
+En amont du classifieur dans la pipeline, un **SMOTE** (`k_neighbors=5`, `random_state=42`) est appliqué sur le jeu d'entraînement. Il génère des exemples synthétiques de la classe minoritaire (CVs sélectionnés) par interpolation entre voisins proches, pour équilibrer la distribution avant l'apprentissage.
+
+### Validation croisée externe
+
+Une cross-validation externe (5 folds stratifiés, `StratifiedKFold`) est lancée sur l'ensemble du pipeline pour évaluer la stabilité des métriques :
+
+| Métrique | Score moyen (CV) |
+|---|---|
+| ROC-AUC | ~affiché à l'exécution |
+| Average Precision | ~affiché à l'exécution |
+| F1 | ~affiché à l'exécution |
 
 * **Pourquoi `StratifiedKFold` ?** Cette méthode de validation croisée découpe les données d'entraînement en 5 sous-ensembles (folds) tout en garantissant le ratio de 25,5% de positifs dans chaque fold. Cela permet de tester la stabilité du modèle et d'optimiser les hyperparamètres de manière fiable sur des petites données.
 * **Pourquoi la pénalité `l1` (Lasso) ?** Les tests ont montré que L2 (Ridge) ou Elastic-Net étaient moins performants. C'est parce que la pénalité **L1 agit comme un sélecteur de variables naturel**. Elle "éteint" (met le coefficient à 0) purement et simplement les variables ou les mots issus du TF-IDF qui ne servent à rien, débruitant ainsi le modèle, là où la L2 se contenterait de les réduire.
@@ -76,20 +134,20 @@ Sur la courbe **Precision/Recall vs Seuil**, on observe que :
 - En parallèle, le **recall** diminue progressivement.
 - La métrique **F0.5**, qui favorise la précision, atteint son maximum autour du seuil **0.70**.
 
-Ce point correspond donc au meilleur compromis selon l’objectif métier :  
+Ce point correspond donc au meilleur compromis selon l'objectif métier :  
 Il faut donc **minimiser les faux positifs**, même si cela implique de rater certains cas pertinents.
 
 ### Analyse de la courbe Precision-Recall
 La courbe PR (AP = 0.569) confirme ce choix :
-- Le point correspondant au seuil **0.70** donne une **precision d’environ 0.60** pour un **recall d’environ 0.60**.
+- Le point correspondant au seuil **0.70** donne une **precision d'environ 0.60** pour un **recall d'environ 0.60**.
 - Au-delà de ce seuil, les gains en précision deviennent faibles tandis que le recall chute fortement.
-- En dessous de ce seuil, le recall augmente mais au prix d’une dégradation rapide de la précision.
+- En dessous de ce seuil, le recall augmente mais au prix d'une dégradation rapide de la précision.
 
 ### Conclusion sur le seuil
 Le seuil de **0.70** permet donc :
 - Une **meilleure qualité des prédictions** (moins de faux positifs)
 - Une **cohérence avec la métrique F0.5**
-- Un comportement adapté à un contexte métier où la **fiabilité prime sur l’exhaustivité**
+- Un comportement adapté à un contexte métier où la **fiabilité prime sur l'exhaustivité**
 
 Ce choix rend le modèle volontairement **conservateur**, ce qui est particulièrement pertinent dans un processus de tri de CV où chaque erreur positive a un coût élevé (temps humain, surcharge des recruteurs, etc.).
 
@@ -114,4 +172,4 @@ Pour simuler une mise en production, le pipeline est ensuite testé sur un tout 
 La dernière étape du notebook permet de persister le travail accompli pour un usage futur.
 * Le script crée automatiquement un dossier `../models` s'il n'existe pas déjà.
 * Afin d'assurer une reproductibilité parfaite et de simplifier le déploiement, **la pipeline complète** (incluant l'imputation, la standardisation et l'encodage TF-IDF) ainsi que **le seuil optimal** sont regroupés dans un même dictionnaire.
-* L'ensemble est sauvegardé via la librairie `joblib` sous le fichier `modele_classification_cv.joblib`. Cela permet à une application de charger un seul fichier pour transformer et prédire de nouveaux CVs.
+* L'ensemble est sauvegardé via la librairie `joblib` sous le fichier `model_classification_cv.joblib`. Cela permet à une application de charger un seul fichier pour transformer et prédire de nouveaux CVs.
