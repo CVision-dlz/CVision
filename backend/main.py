@@ -76,7 +76,7 @@ for filename, cv_text in all_cvs.items():
             "certifications":          pre_processed_data.get("certifications"),
         }
 
-        output_path = EXTRACTED / f"{cv_id}.json"
+        output_path = EXTRACTED / f"{filename.split(".")[0]}.json"
         output_path.write_text(json.dumps(final_json, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"Succès -> {output_path} sauvegardé !\n")
 
