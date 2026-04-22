@@ -1,0 +1,9 @@
+# Par défaut, tout le repo nécessite une review de l'équipe HELMo
+*                   @dlz-dev @Bixymax
+
+# Frontend — CESI peut merger librement, HELMo reste notifié
+/frontend/          @dlz-dev @Bixymax
+
+# Backend & infra — HELMo exclusivement
+/backend/           @dlz-dev @Bixymax
+/infra/             @dlz-dev @Bixymax
