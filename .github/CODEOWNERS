@@ -1,0 +1,9 @@
+# Par défaut, tout le repo nécessite une review du backend-team
+*                                   @CVision-dlz/backend-team
+
+# Frontend — frontend-team peut merger, backend-team reste notifié
+/frontend/                          @CVision-dlz/backend-team @CVision-dlz/frontend-team
+
+# Backend & infra — backend-team exclusivement
+/backend/                           @CVision-dlz/backend-team
+/infra/                             @CVision-dlz/backend-team
