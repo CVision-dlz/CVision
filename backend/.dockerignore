@@ -1,0 +1,12 @@
+notebooks/
+data/raw/
+data/extracted/
+data/quarantaine/
+tests/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.pytest_cache/
+.ipynb_checkpoints/
+*.ipynb
