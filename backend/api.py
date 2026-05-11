@@ -1,8 +1,10 @@
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import joblib
+import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -23,9 +25,10 @@ from core.preprocessor import (
 # Constantes et chemins
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "models" / "model_classification_cv_strict.joblib"
+FAIR_MODEL_PATH = BASE_DIR / "models" / "model_classification_cv_FAIR.joblib"
 
 # Initialisation de l'application
-app = FastAPI(title="CVision API", version="1.0.1")
+app = FastAPI(title="CVision API", version="1.0.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,7 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Chargement du modèle au démarrage avec gestion d'erreur
+# Chargement du modèle standard au démarrage
 try:
     model_data = joblib.load(MODEL_PATH)
     MODEL_PIPELINE = model_data["pipeline"]
@@ -44,6 +47,16 @@ except FileNotFoundError:
     raise RuntimeError(f"Le fichier modèle est introuvable au chemin : {MODEL_PATH}")
 except KeyError as e:
     raise RuntimeError(f"Structure du dictionnaire modèle invalide. Clé manquante : {e}")
+
+# Chargement du modèle FAIR au démarrage
+try:
+    fair_model_data = joblib.load(FAIR_MODEL_PATH)
+    FAIR_PIPELINE = fair_model_data["pipeline"]
+    FAIR_THRESHOLD = fair_model_data["optimal_threshold"]
+except FileNotFoundError:
+    raise RuntimeError(f"Le fichier modèle FAIR est introuvable au chemin : {FAIR_MODEL_PATH}")
+except KeyError as e:
+    raise RuntimeError(f"Structure du dictionnaire modèle FAIR invalide. Clé manquante : {e}")
 
 
 def apply_feature_engineering(cv_data: Dict[str, Any]) -> pd.DataFrame:
@@ -96,6 +109,71 @@ def predict(df_features: pd.DataFrame) -> Dict[str, Any]:
         "decision": prediction_label,
         "probability": float(proba),
         "threshold_used": float(BEST_THRESHOLD),
+    }
+
+
+def _clean_feature_name(name: str) -> str:
+    """Retire les préfixes du ColumnTransformer (ex: 'standardscaler__age' → 'age')."""
+    parts = name.split("__")
+    return parts[-1] if len(parts) > 1 else name
+
+
+def predict_fair_with_explanation(df_features: pd.DataFrame) -> Dict[str, Any]:
+    """
+    Évalue via le modèle FAIR et retourne la décision + les contributions log-odds
+    de chaque feature (explication transparente de la décision).
+    """
+    proba = FAIR_PIPELINE.predict_proba(df_features)[:, 1][0]
+    prediction_label = "✅ Sélectionné" if proba >= FAIR_THRESHOLD else "❌ Refusé"
+
+    # Transformation des données à travers tous les steps sauf le classifieur
+    X = df_features
+    last_transformer = None
+    for _, step in FAIR_PIPELINE.steps[:-1]:
+        X = step.transform(X)
+        last_transformer = step
+
+    # Coefficients du classifieur logistique
+    clf = FAIR_PIPELINE.steps[-1][1]
+    coefs = clf.coef_[0]
+
+    # Conversion en tableau dense si la matrice est sparse
+    if sp.issparse(X):
+        X_arr = X.toarray()[0]
+    else:
+        X_arr = np.asarray(X).flatten()
+
+    # Contributions log-odds : coef_i × x_i
+    contributions = (X_arr * coefs).astype(float)
+
+    # Récupération et nettoyage des noms de features
+    try:
+        raw_names = last_transformer.get_feature_names_out()
+        feature_names = [_clean_feature_name(str(n)) for n in raw_names]
+    except Exception:
+        feature_names = [f"feature_{i}" for i in range(len(coefs))]
+
+    # Top 10 features par contribution absolue (en excluant les contributions nulles)
+    nonzero_idx = np.where(np.abs(contributions) > 1e-4)[0]
+    top_idx = nonzero_idx[np.argsort(np.abs(contributions[nonzero_idx]))[::-1]][:10]
+
+    explanations: List[Dict[str, Any]] = [
+        {
+            "feature": feature_names[i],
+            "contribution": round(float(contributions[i]), 4),
+            "direction": "favorable" if contributions[i] > 0 else "défavorable",
+        }
+        for i in top_idx
+    ]
+
+    log_odds = float(np.log(proba / (1 - proba))) if 0 < proba < 1 else 0.0
+
+    return {
+        "decision": prediction_label,
+        "probability": float(proba),
+        "threshold_used": float(FAIR_THRESHOLD),
+        "log_odds": round(log_odds, 4),
+        "explanations": explanations,
     }
 
 
@@ -153,6 +231,64 @@ async def process_cv(file: UploadFile = File(...)):
     # 4. Feature Engineering et Prédiction
     df_features = apply_feature_engineering(result)
     prediction_results = predict(df_features)
+
+    # 5. Enrichissement de la réponse JSON
+    result.update(prediction_results)
+    result["computed_features"] = df_features.to_dict(orient="records")[0]
+
+    return result
+
+
+@app.post("/process-cv-fair")
+async def process_cv_fair(file: UploadFile = File(...)):
+    """
+    Endpoint Fair Model : utilise le modèle équitable (sans features discriminatoires)
+    et retourne les explications détaillées de chaque décision.
+    """
+    try:
+        cv_text = (await file.read()).decode("utf-8")
+    except UnicodeDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible de lire le fichier. Assurez-vous qu'il est encodé en UTF-8."
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # 1. Extraction et structuration (LLM + Pre-processing)
+    pre_data = pre_process_cv(cv_text)
+    optimized_cv_text = clean_cv_text_for_llm(cv_text)
+    llm_data = extract_cv(optimized_cv_text)
+
+    # 2. Nettoyage et complétion des métriques
+    exp_metrics = compute_experience_metrics(llm_data.get("experiences", []))
+    education_data = llm_data.get("education", {})
+
+    if education_data:
+        education_data.update({
+            "graduation_year": pre_data.get("graduation_year"),
+            "years_since_graduation": pre_data.get("years_since_graduation"),
+            "education_score": score_education(education_data.get("degree")),
+        })
+
+    # 3. Assemblage du dictionnaire complet
+    result = {
+        "meta": {"cv_id": "api_input"},
+        "age": pre_data.get("age"),
+        "distance_ville_haute_km": pre_data.get("distance_ville_haute_km"),
+        "target_role": pre_data.get("target_role"),
+        "education": education_data,
+        "experiences": exp_metrics["experiences"],
+        "total_experience_years": exp_metrics["total_experience_years"],
+        "experience_gaps_months": exp_metrics["experience_gaps_months"],
+        "skills": pre_data.get("skills"),
+        "languages": pre_data.get("languages"),
+        "certifications": pre_data.get("certifications"),
+    }
+
+    # 4. Feature Engineering et Prédiction avec explications
+    df_features = apply_feature_engineering(result)
+    prediction_results = predict_fair_with_explanation(df_features)
 
     # 5. Enrichissement de la réponse JSON
     result.update(prediction_results)
