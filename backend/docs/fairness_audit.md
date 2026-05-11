@@ -85,6 +85,7 @@ L'audit suit **8 étapes** explicites, chacune justifiée méthodologiquement et
 4. Validation statistique de chaque écart
    → Fisher exact (2x2) ou Chi² Pearson (3x2), seuil α=0.05
    → IC bootstrap 95% sur l'EOD (n=1000 ré-échantillonnages)
+   → Calibration par groupe (3ᵉ jambe : DP / EO / Calibration)
 
 5. Analyse intersectionnelle
    → heatmaps Âge × Francophonie / Âge × Géographie
@@ -93,12 +94,42 @@ L'audit suit **8 étapes** explicites, chacune justifiée méthodologiquement et
    → distinguer ce qui est légitime (poste) de ce qui est suspect
 
 7. Explicabilité du modèle
-   → coefficients L1 (modèle d'origine) + SHAP (modèle FAIR)
+   → coefficients L1 (modèle d'origine) + SHAP (modèle FAIR) + log-odds individuels
 
 8. Stratégie corrective + comparaison avant/après
    → suppression features sensibles, split anti-leakage 60/20/20
+   → choix du seuil F-beta documenté comme décision éthique
    → trade-off équité/performance documenté
 ```
+
+### Méthodologie d'expert IA — ce qui est couvert et ce qui ne l'est pas
+
+Un audit de classification "production-grade" inclut typiquement les éléments suivants. Tableau de couverture :
+
+| Élément attendu | Couvert ? | Où / pourquoi pas |
+|---|---|---|
+| Reproduction du split d'entraînement (out-of-sample) | ✅ | §3 |
+| Sanity checks sur les données (n, classes, nulls) | ✅ | §3 (déséquilibre 80/20 explicité) |
+| Métriques performance globales (ROC-AUC, F1) | ✅ | §11 |
+| Métriques d'équité multi-attributs (DP / EO / Calibration) | ✅ | §5, §6, §7 |
+| Significativité statistique (Chi² / Fisher) | ✅ | §6 |
+| Intervalles de confiance (bootstrap) | ✅ | §6 |
+| Calibration par groupe | ✅ | §6 (3ᵉ jambe) |
+| Analyse intersectionnelle | ✅ | §7 |
+| Explicabilité globale ET locale | ✅ | §9, §12 |
+| Stratégie corrective + justification légale | ✅ | §10 |
+| Validation anti-data-leakage | ✅ | §10 (split 60/20/20) |
+| Comparaison ancien vs nouveau sur même test | ✅ | §11 |
+| Documentation des effets de bord | ✅ | §11 |
+| Choix du seuil explicité comme décision éthique | ✅ | §10 |
+| Reproductibilité (`random_state=42` partout) | ✅ | tous les notebooks |
+| Sauvegarde du modèle FAIR avec metadata | ✅ | §13 du notebook |
+| Test exact pour contingences 3×2 avec cellules <5 (Fisher-Freeman-Halton) | 🟡 | Hors scipy. Chi² annoté à la place |
+| Baseline (DummyClassifier majority) | ❌ | Hors scope WP2. ROC-AUC=0.71 vs 0.5 implicite suffit. |
+| Expected Calibration Error (ECE) par bin | ❌ | Méthode simple "moyenne globale par groupe" retenue pour lisibilité RH |
+| Test de stabilité temporelle (data drift) | ❌ | Demande un suivi production, recommandé en §13 (audit annuel) |
+
+Le notebook couvre **toutes les composantes méthodologiques attendues d'un audit académique B2 + tous les livrables WP2 §B/C/D**. Les éléments en ❌ sortent du scope du livrable WP2 et sont mentionnés comme recommandations pour la production.
 
 ### Trois règles d'or appliquées dans tout l'audit
 
@@ -273,6 +304,35 @@ Interprétation :
 
 C'est une honnêteté méthodologique importante : un EOD point à 1.00 avec un IC [0.6, 1.0] ne raconte pas la même histoire qu'un EOD à 1.00 avec un IC [0.95, 1.0]. Dans notre cas, les IC sont effectivement larges et confirment la nécessité d'un dataset plus grand pour un audit définitif.
 
+### Calibration par groupe — la 3ᵉ jambe du fairness
+
+La littérature fairness (Hardt et al. 2016 ; Pleiss et al. 2017) reconnaît **trois critères d'équité non simultanément satisfaisables** quand les base rates diffèrent :
+
+1. **Demographic Parity** — taux de sélection égaux entre groupes (DP).
+2. **Equal Opportunity** — TPR égaux à qualification égale (EOD).
+3. **Calibration** — quand le modèle dit P=x dans deux groupes, la fraction réellement qualifiée est ≈ x dans les deux cas.
+
+DP et EO ont été couverts par les métriques §5 et les tests §6.1–6.2. La calibration mesure une chose différente : **la fiabilité numérique des probabilités prédites entre groupes**.
+
+**Pourquoi c'est important pour le recruteur** : si un Junior à P=0.5 est qualifié dans 20% des cas mais qu'un Senior à P=0.5 est qualifié dans 50% des cas, alors un même score de 0.5 ne *veut pas dire la même chose* selon le groupe. Le recruteur qui compare deux candidats à proba égale ferait un choix biaisé sans le savoir. C'est le type de biais que DP et EO ne détectent pas.
+
+**Méthode appliquée** (volontairement simple) :
+
+```
+Pour chaque groupe g :
+    mean_proba(g) = moyenne des probabilités prédites
+    base_rate(g)  = moyenne des étiquettes réelles
+    calibration_gap(g) = | mean_proba(g) − base_rate(g) |
+
+Seuil d'alerte : gap > 0.10
+```
+
+Un gap > 0.10 signale une **sur- ou sous-confiance systématique** du modèle pour ce groupe.
+
+**Lien légal** : AI Act Art. 15 — *« Les systèmes IA à haut risque sont conçus de manière à atteindre […] un niveau d'exactitude approprié »*. La calibration est une mesure directe de cette exactitude conditionnelle au groupe.
+
+> Approche plus poussée (hors-scope ici) : calculer l'**Expected Calibration Error** (ECE) par groupe en découpant les probabilités en 10 bins. Notre méthode "moyenne globale par groupe" suffit pour détecter une décalibration grossière et reste lisible pour un RH.
+
 ---
 
 ## Analyse par attribut & intersectionnalité
@@ -407,6 +467,29 @@ Dataset 500 candidats
 ```
 
 Le seuil de décision est optimisé sur la validation par F-beta (β=0.5, privilégie la précision). Le test set n'est touché qu'une seule fois en toute fin pour produire les chiffres du §11.
+
+### Justification du choix du seuil — un choix éthique implicite
+
+Le choix de β=0.5 dans la F-beta n'est pas neutre — c'est une décision **éthique** qui doit être explicitée :
+
+| β | Optimise | Conséquence pour le candidat | Conséquence pour LuxTalent |
+|---|---|---|---|
+| β = 0.5 (notre choix) | Précision > rappel | Moins de faux positifs : un candidat "sélectionné" l'est probablement vraiment | Moins d'entretiens à organiser, mais on rate plus de vrais talents |
+| β = 1.0 (équilibré) | F1 équilibré | Standard | Compromis |
+| β = 2.0 | Rappel > précision | Plus de chances d'être invité même si la conviction du modèle est faible | Plus d'entretiens, mais moins de vrais talents ratés |
+
+Nous avons retenu **β=0.5** pour deux raisons :
+
+1. **Précaution éthique côté faux positif** : un candidat à qui on dit "sélectionné" puis qu'on rejette à l'entretien est une mauvaise expérience humaine et juridique. Mieux vaut être prudent dans le « oui ».
+2. **Coût opérationnel** : un faux positif coûte un entretien (RH mobilisé, candidat dérangé) ; un faux négatif coûte un talent raté. Pour LuxTalent en haut volume, le coût d'un entretien est plus tangible — donc privilégier précision.
+
+> Ce choix est **contestable** et **doit l'être** : un client qui privilégierait l'inclusion (rappel maximum) demanderait β=2. La fonction `precision_recall_curve` étant déjà calculée, un changement de β ne demande pas de ré-entraînement, seulement un recalibrage du seuil. C'est une décision *à valider avec le donneur d'ordre*, pas un choix technique anodin.
+
+Seuils obtenus :
+- **Ancien modèle** : 0.1434 (très bas — privilégie le rappel) ← héritage du notebook de classification
+- **Nouveau modèle FAIR** : 0.6352 (modéré — privilégie la précision)
+
+L'écart vient en partie du fait que le nouveau modèle, ayant moins de features, produit des probabilités plus polarisées (moins de candidats en zone grise).
 
 **Résultats du modèle FAIR sur le test set** :
 ```
