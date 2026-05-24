@@ -7,7 +7,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.analyzer import extract_cv
@@ -70,7 +70,7 @@ async def _log_decision(filename: str, model: str, decision: str, score: float, 
         return
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(
+            r = await client.post(
                 f"{SUPABASE_URL}/rest/v1/cv_decisions",
                 headers={
                     "apikey": SUPABASE_KEY,
@@ -88,8 +88,9 @@ async def _log_decision(filename: str, model: str, decision: str, score: float, 
                 },
                 timeout=5.0,
             )
-    except Exception:
-        pass
+            print(f"[Supabase log] status={r.status_code} body={r.text[:200]}")
+    except Exception as e:
+        print(f"[Supabase log] ERREUR: {e}")
 
 
 def apply_feature_engineering(cv_data: Dict[str, Any]) -> pd.DataFrame:
@@ -211,7 +212,7 @@ def predict_fair_with_explanation(df_features: pd.DataFrame) -> Dict[str, Any]:
 
 
 @app.post("/process-cv")
-async def process_cv(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def process_cv(file: UploadFile = File(...)):
     """
     Endpoint principal pour traiter un fichier CV.
     Lit le fichier, extrait le texte, génère les features et renvoie la prédiction.
@@ -265,9 +266,8 @@ async def process_cv(background_tasks: BackgroundTasks, file: UploadFile = File(
     df_features = apply_feature_engineering(result)
     prediction_results = predict(df_features)
 
-    # 5. Log en arrière-plan
-    background_tasks.add_task(
-        _log_decision,
+    # 5. Log Supabase
+    await _log_decision(
         filename=file.filename or "inconnu",
         model="standard",
         decision=prediction_results["decision"],
@@ -283,7 +283,7 @@ async def process_cv(background_tasks: BackgroundTasks, file: UploadFile = File(
 
 
 @app.post("/process-cv-fair")
-async def process_cv_fair(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+async def process_cv_fair(file: UploadFile = File(...)):
     """
     Endpoint Fair Model : utilise le modèle équitable (sans features discriminatoires)
     et retourne les explications détaillées de chaque décision.
@@ -333,9 +333,8 @@ async def process_cv_fair(background_tasks: BackgroundTasks, file: UploadFile = 
     df_features = apply_feature_engineering(result)
     prediction_results = predict_fair_with_explanation(df_features)
 
-    # 5. Log en arrière-plan
-    background_tasks.add_task(
-        _log_decision,
+    # 5. Log Supabase
+    await _log_decision(
         filename=file.filename or "inconnu",
         model="fair",
         decision=prediction_results["decision"],
