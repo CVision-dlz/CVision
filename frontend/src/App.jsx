@@ -45,6 +45,13 @@ function getCategory(feature) {
   return "Autre"
 }
 
+function getImpactLabel(magnitude) {
+  if (magnitude > 0.5) return { label: "Décisif", dots: "●●●" }
+  if (magnitude > 0.2) return { label: "Fort",    dots: "●●" }
+  if (magnitude > 0.05) return { label: "Modéré", dots: "●" }
+  return { label: "Faible", dots: "·" }
+}
+
 function generateSummary(explanations, decision) {
   if (!explanations?.length) return null
   const isSelected = decision?.includes("Sélectionné") || decision === "Inviter"
@@ -97,6 +104,7 @@ function ThresholdGauge({ probability, threshold }) {
 
 // ─── Barres de contribution groupées par catégorie ──────────────────────────
 function CategorizedBars({ explanations }) {
+  const [mathMode, setMathMode] = useState(false)
   if (!explanations?.length) return null
   const maxAbs = Math.max(...explanations.map(e => Math.abs(e.contribution)))
 
@@ -109,20 +117,29 @@ function CategorizedBars({ explanations }) {
 
   return (
     <div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+        <button className="toggle-mode-btn" onClick={() => setMathMode(m => !m)}>
+          {mathMode ? "Version intuitive" : "Voir les scores"}
+        </button>
+      </div>
       {Object.entries(grouped).map(([cat, items]) => (
         <div key={cat} className="cat-group">
           <div className="cat-label">{cat}</div>
           {items.map((e, i) => {
             const pct = maxAbs > 0 ? (Math.abs(e.contribution) / maxAbs) * 100 : 0
             const pos = e.direction === "favorable"
+            const impact = getImpactLabel(Math.abs(e.contribution))
             return (
               <div key={i} className="expl-row">
                 <div className="expl-name" title={e.feature}>{getLabel(e.feature)}</div>
                 <div className="expl-bar-wrap">
                   <div className={`expl-bar ${pos ? "bar-pos" : "bar-neg"}`} style={{ width: `${pct}%` }} />
                 </div>
-                <div className={`expl-val ${pos ? "val-pos" : "val-neg"}`}>
-                  {e.contribution > 0 ? "+" : ""}{e.contribution.toFixed(3)}
+                <div className={`impact-label ${pos ? "val-pos" : "val-neg"}`}>
+                  {mathMode
+                    ? `${e.contribution > 0 ? "+" : ""}${e.contribution.toFixed(3)}`
+                    : <>{impact.dots} <span style={{ fontSize: "10px", opacity: 0.85 }}>{impact.label}</span></>
+                  }
                 </div>
               </div>
             )
@@ -277,9 +294,39 @@ function FairResultPanel({ result, filename }) {
   )
 }
 
+// ─── Détail features historique avec toggle ────────────────────────────────
+function HistoryFeatureDetail({ features, title }) {
+  const [mathMode, setMathMode] = useState(false)
+  return (
+    <div className="history-features">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+        <div className="history-features-title">{title || "Top contributions (modèle FAIR)"}</div>
+        <button className="toggle-mode-btn" onClick={() => setMathMode(m => !m)}>
+          {mathMode ? "Version intuitive" : "Voir les scores"}
+        </button>
+      </div>
+      {features.map((f, i) => {
+        const impact = getImpactLabel(Math.abs(f.contribution))
+        return (
+          <div key={i} className="hf-row">
+            <span className="hf-name">{getLabel(f.feature)}</span>
+            <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
+              {mathMode
+                ? `${f.contribution > 0 ? "+" : ""}${f.contribution.toFixed(3)}`
+                : `${impact.dots} ${impact.label}`
+              }
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Modal comparaison ─────────────────────────────────────────────────────
 function CompareModal({ rows, onClose }) {
   const [a, b] = rows
+  const [mathMode, setMathMode] = useState(false)
   const scoreDiff = ((a.score - b.score) * 100).toFixed(1)
   const winner = a.score > b.score ? a.filename : b.filename
 
@@ -321,14 +368,20 @@ function CompareModal({ rows, onClose }) {
         {row.top_features?.length > 0 && (
           <div className="compare-features">
             <div className="history-features-title">Top contributions</div>
-            {row.top_features.map((f, i) => (
-              <div key={i} className="hf-row">
-                <span className="hf-name">{getLabel(f.feature)}</span>
-                <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
-                  {f.contribution > 0 ? "+" : ""}{f.contribution.toFixed(3)}
-                </span>
-              </div>
-            ))}
+            {row.top_features.map((f, i) => {
+              const impact = getImpactLabel(Math.abs(f.contribution))
+              return (
+                <div key={i} className="hf-row">
+                  <span className="hf-name">{getLabel(f.feature)}</span>
+                  <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
+                    {mathMode
+                      ? `${f.contribution > 0 ? "+" : ""}${f.contribution.toFixed(3)}`
+                      : `${impact.dots} ${impact.label}`
+                    }
+                  </span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
@@ -343,7 +396,12 @@ function CompareModal({ rows, onClose }) {
             <div className="modal-title">Comparaison de candidats</div>
             <div className="modal-sub">Cliquez en dehors pour fermer</div>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button className="toggle-mode-btn" onClick={() => setMathMode(m => !m)}>
+              {mathMode ? "Version intuitive" : "Voir les scores"}
+            </button>
+            <button className="modal-close" onClick={onClose}>✕</button>
+          </div>
         </div>
         <div className="modal-grid">
           <CardSide row={a} />
@@ -1186,6 +1244,23 @@ export default function App() {
         }
         .hf-name { color: #6b6560; }
         .hf-val { font-weight: 600; font-size: 12px; }
+        .toggle-mode-btn {
+          font-size: 10px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: #8b6f47;
+          background: none;
+          border: 1px solid #d4c4b0;
+          border-radius: 100px;
+          padding: 4px 12px;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+        .toggle-mode-btn:hover { background: #fdf9f4; border-color: #8b6f47; }
+        .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
 
         /* ── Checkbox sélection ── */
         .row-checkbox {
@@ -1283,10 +1358,11 @@ export default function App() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          text-align: center;
         }
-        .compare-date { font-size: 12px; color: #a09890; margin-bottom: 14px; }
-        .compare-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-        .compare-score-block { margin-bottom: 20px; }
+        .compare-date { font-size: 12px; color: #a09890; margin-bottom: 14px; text-align: center; }
+        .compare-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
+        .compare-score-block { margin-bottom: 20px; text-align: center; }
         .compare-score-label {
           font-size: 10px;
           letter-spacing: 2px;
@@ -1484,17 +1560,7 @@ export default function App() {
                           {isExpanded && row.top_features?.length > 0 && (
                             <tr key={row.id + "-detail"} className="history-detail-row">
                               <td colSpan={8}>
-                                <div className="history-features">
-                                  <div className="history-features-title">Top contributions (modèle FAIR)</div>
-                                  {row.top_features.map((f, i) => (
-                                    <div key={i} className="hf-row">
-                                      <span className="hf-name">{getLabel(f.feature)}</span>
-                                      <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
-                                        {f.contribution > 0 ? "+" : ""}{f.contribution.toFixed(3)}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
+                                <HistoryFeatureDetail features={row.top_features} />
                               </td>
                             </tr>
                           )}
