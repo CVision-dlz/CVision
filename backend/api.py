@@ -211,7 +211,7 @@ def predict_fair_with_explanation(df_features: pd.DataFrame) -> Dict[str, Any]:
 
 
 @app.post("/process-cv")
-async def process_cv(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
+async def process_cv(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """
     Endpoint principal pour traiter un fichier CV.
     Lit le fichier, extrait le texte, génère les features et renvoie la prédiction.
@@ -283,7 +283,7 @@ async def process_cv(file: UploadFile = File(...), background_tasks: BackgroundT
 
 
 @app.post("/process-cv-fair")
-async def process_cv_fair(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
+async def process_cv_fair(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
     """
     Endpoint Fair Model : utilise le modèle équitable (sans features discriminatoires)
     et retourne les explications détaillées de chaque décision.
