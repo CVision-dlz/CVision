@@ -277,6 +277,92 @@ function FairResultPanel({ result, filename }) {
   )
 }
 
+// ─── Modal comparaison ─────────────────────────────────────────────────────
+function CompareModal({ rows, onClose }) {
+  const [a, b] = rows
+  const scoreDiff = ((a.score - b.score) * 100).toFixed(1)
+  const winner = a.score > b.score ? a.filename : b.filename
+
+  function CardSide({ row }) {
+    const isSelected = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+    const date = new Date(row.created_at)
+    const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })
+    const timeStr = date.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })
+    return (
+      <div className={`compare-card ${isSelected ? "compare-selected" : "compare-rejected"}`}>
+        <div className="compare-filename">{row.filename}</div>
+        <div className="compare-date">{dateStr} à {timeStr}</div>
+        <div className="compare-badges">
+          <span className={`model-badge ${row.model === "fair" ? "badge-fair" : "badge-std"}`}>
+            {row.model === "fair" ? "FAIR" : "Standard"}
+          </span>
+          <span className={`decision-pill-sm ${isSelected ? "invite" : "reject"}`}>
+            <span className="dot" />
+            {isSelected ? "Sélectionné" : "Refusé"}
+          </span>
+        </div>
+        <div className="compare-score-block">
+          <div className="compare-score-label">Score de confiance</div>
+          <div className={`compare-score-val ${isSelected ? "val-pos" : "val-neg"}`}>
+            {(row.score * 100).toFixed(1)}%
+          </div>
+          <div className="compare-bar-wrap">
+            <div
+              className={`compare-bar-fill ${isSelected ? "bar-pos" : "bar-neg"}`}
+              style={{ width: `${Math.min(row.score * 100, 100).toFixed(1)}%` }}
+            />
+            <div
+              className="compare-threshold-mark"
+              style={{ left: `${Math.min(row.threshold * 100, 100).toFixed(1)}%` }}
+            />
+          </div>
+          <div className="compare-threshold-label">Seuil de décision : {(row.threshold * 100).toFixed(1)}%</div>
+        </div>
+        {row.top_features?.length > 0 && (
+          <div className="compare-features">
+            <div className="history-features-title">Top contributions</div>
+            {row.top_features.map((f, i) => (
+              <div key={i} className="hf-row">
+                <span className="hf-name">{getLabel(f.feature)}</span>
+                <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
+                  {f.contribution > 0 ? "+" : ""}{f.contribution.toFixed(3)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-panel" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Comparaison de candidats</div>
+            <div className="modal-sub">Cliquez en dehors pour fermer</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-grid">
+          <CardSide row={a} />
+          <CardSide row={b} />
+          <div className="compare-diff-banner">
+            <span>Écart de score :</span>
+            <span className={`compare-diff-val ${Math.abs(parseFloat(scoreDiff)) > 0 ? (parseFloat(scoreDiff) > 0 ? "val-pos" : "val-neg") : ""}`}>
+              {scoreDiff > 0 ? "+" : ""}{scoreDiff}%
+            </span>
+            <span style={{ marginLeft: "auto", fontSize: "12px", color: "#a09890" }}>
+              Meilleur score : <strong style={{ color: "#1a1a1a" }}>{winner}</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Dropzone réutilisable ──────────────────────────────────────────────────
 function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, desc }) {
   const [dragging, setDragging] = useState(false)
@@ -348,6 +434,16 @@ export default function App() {
   const [history, setHistory]           = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [expandedRow, setExpandedRow]   = useState(null)
+  const [selectedRows, setSelectedRows] = useState([])
+  const [showCompare, setShowCompare]   = useState(false)
+
+  function toggleSelect(row) {
+    setSelectedRows(prev => {
+      if (prev.find(r => r.id === row.id)) return prev.filter(r => r.id !== row.id)
+      if (prev.length >= 2) return [prev[1], row]
+      return [...prev, row]
+    })
+  }
 
   async function fetchHistory() {
     setHistoryLoading(true)
@@ -1090,6 +1186,154 @@ export default function App() {
         }
         .hf-name { color: #6b6560; }
         .hf-val { font-weight: 600; font-size: 12px; }
+
+        /* ── Checkbox sélection ── */
+        .row-checkbox {
+          width: 16px; height: 16px; cursor: pointer; accent-color: #8b6f47;
+        }
+        .history-row.selected-row { background: #fdf9f4; }
+        .history-row.selected-row > td:first-child { border-left: 3px solid #8b6f47; }
+
+        /* ── Bouton comparer ── */
+        .compare-btn {
+          padding: 10px 22px;
+          background: #8b6f47;
+          border: none;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: #fff;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          margin-left: 12px;
+        }
+        .compare-btn:hover { background: #7a5e38; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(26,26,26,0.55);
+          backdrop-filter: blur(4px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 32px;
+        }
+        .modal-panel {
+          background: #faf9f7;
+          border-radius: 20px;
+          border: 1px solid #e2ddd8;
+          width: 100%;
+          max-width: 920px;
+          max-height: 90vh;
+          overflow-y: auto;
+          padding: 40px;
+          box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+        }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+        }
+        .modal-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 24px;
+          color: #1a1a1a;
+          letter-spacing: -0.5px;
+        }
+        .modal-sub { font-size: 13px; color: #a09890; font-weight: 300; margin-top: 4px; }
+        .modal-close {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          border: 1px solid #e2ddd8;
+          background: #fff;
+          cursor: pointer;
+          font-size: 14px;
+          color: #6b6560;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          flex-shrink: 0;
+        }
+        .modal-close:hover { background: #fdf0f0; color: #c0392b; border-color: #f0c8c8; }
+        .modal-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+        }
+        .compare-card {
+          background: #fff;
+          border-radius: 16px;
+          padding: 28px;
+          border: 1.5px solid #e2ddd8;
+        }
+        .compare-card.compare-selected { border-color: #c3e6d0; }
+        .compare-card.compare-rejected { border-color: #f0c8c8; }
+        .compare-filename {
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #a09890;
+          margin-bottom: 4px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .compare-date { font-size: 12px; color: #a09890; margin-bottom: 14px; }
+        .compare-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .compare-score-block { margin-bottom: 20px; }
+        .compare-score-label {
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #a09890;
+          font-weight: 500;
+          margin-bottom: 6px;
+        }
+        .compare-score-val {
+          font-family: 'DM Serif Display', serif;
+          font-size: 40px;
+          color: #1a1a1a;
+          margin-bottom: 10px;
+        }
+        .compare-bar-wrap {
+          position: relative;
+          height: 10px;
+          background: #ede9e4;
+          border-radius: 5px;
+          overflow: visible;
+          margin-bottom: 6px;
+        }
+        .compare-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
+        .compare-threshold-mark {
+          position: absolute;
+          top: -4px;
+          width: 2px;
+          height: 18px;
+          background: #1a1a1a;
+          border-radius: 1px;
+          transform: translateX(-50%);
+        }
+        .compare-threshold-label { font-size: 11px; color: #a09890; }
+        .compare-features { padding-top: 12px; border-top: 1px solid #e2ddd8; margin-top: 4px; }
+        .compare-diff-banner {
+          grid-column: 1 / -1;
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 12px;
+          padding: 16px 22px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 13px;
+          color: #6b6560;
+        }
+        .compare-diff-val { font-weight: 700; font-size: 15px; }
       `}</style>
 
       <div className="page">
@@ -1160,9 +1404,21 @@ export default function App() {
                 <div className="history-title">Historique des décisions</div>
                 <div className="history-sub">{history.length} décision{history.length !== 1 ? "s" : ""} enregistrée{history.length !== 1 ? "s" : ""}</div>
               </div>
-              <button className="refresh-btn" onClick={fetchHistory} disabled={historyLoading}>
-                {historyLoading ? "Chargement…" : "↻ Actualiser"}
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {selectedRows.length > 0 && (
+                  <button className="refresh-btn" onClick={() => setSelectedRows([])}>
+                    ✕ {selectedRows.length} sélectionné{selectedRows.length > 1 ? "s" : ""}
+                  </button>
+                )}
+                {selectedRows.length === 2 && (
+                  <button className="compare-btn" onClick={() => setShowCompare(true)}>
+                    Comparer (2)
+                  </button>
+                )}
+                <button className="refresh-btn" onClick={fetchHistory} disabled={historyLoading}>
+                  {historyLoading ? "Chargement…" : "↻ Actualiser"}
+                </button>
+              </div>
             </div>
 
             {historyLoading && history.length === 0 ? (
@@ -1174,6 +1430,7 @@ export default function App() {
                 <table className="history-table">
                   <thead>
                     <tr>
+                      <th style={{ width: "40px" }}></th>
                       <th>Date</th>
                       <th>Fichier</th>
                       <th>Modèle</th>
@@ -1192,7 +1449,19 @@ export default function App() {
                       const isExpanded = expandedRow === row.id
                       return (
                         <>
-                          <tr key={row.id} className={`history-row ${isExpanded ? "expanded" : ""}`} onClick={() => setExpandedRow(isExpanded ? null : row.id)}>
+                          <tr
+                            key={row.id}
+                            className={`history-row ${isExpanded ? "expanded" : ""} ${selectedRows.find(r => r.id === row.id) ? "selected-row" : ""}`}
+                            onClick={() => setExpandedRow(isExpanded ? null : row.id)}
+                          >
+                            <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
+                              <input
+                                type="checkbox"
+                                className="row-checkbox"
+                                checked={!!selectedRows.find(r => r.id === row.id)}
+                                onChange={() => toggleSelect(row)}
+                              />
+                            </td>
                             <td className="td-date">{dateStr}<br /><span className="td-time">{timeStr}</span></td>
                             <td className="td-file">{row.filename}</td>
                             <td>
@@ -1214,7 +1483,7 @@ export default function App() {
                           </tr>
                           {isExpanded && row.top_features?.length > 0 && (
                             <tr key={row.id + "-detail"} className="history-detail-row">
-                              <td colSpan={7}>
+                              <td colSpan={8}>
                                 <div className="history-features">
                                   <div className="history-features-title">Top contributions (modèle FAIR)</div>
                                   {row.top_features.map((f, i) => (
@@ -1235,6 +1504,10 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
+            )}
+
+            {showCompare && selectedRows.length === 2 && (
+              <CompareModal rows={selectedRows} onClose={() => setShowCompare(false)} />
             )}
           </div>
         )}
