@@ -1,6 +1,7 @@
 fastapi==0.135.3
 geopy==2.4.1
 groq==1.1.2
+httpx==0.28.1
 imbalanced_learn==0.14.1
 joblib==1.5.3
 numpy==2.4.4

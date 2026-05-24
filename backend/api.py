@@ -1,11 +1,13 @@
+import os
 from pathlib import Path
 from typing import Any, Dict, List
 
+import httpx
 import joblib
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.analyzer import extract_cv
@@ -21,6 +23,10 @@ from core.preprocessor import (
     pre_process_cv,
     score_education,
 )
+
+# Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
 
 # Constantes et chemins
 BASE_DIR = Path(__file__).resolve().parent
@@ -57,6 +63,33 @@ except FileNotFoundError:
     raise RuntimeError(f"Le fichier modèle FAIR est introuvable au chemin : {FAIR_MODEL_PATH}")
 except KeyError as e:
     raise RuntimeError(f"Structure du dictionnaire modèle FAIR invalide. Clé manquante : {e}")
+
+
+async def _log_decision(filename: str, model: str, decision: str, score: float, threshold: float, top_features=None):
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(
+                f"{SUPABASE_URL}/rest/v1/cv_decisions",
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_KEY}",
+                    "Content-Type": "application/json",
+                    "Prefer": "return=minimal",
+                },
+                json={
+                    "filename": filename,
+                    "model": model,
+                    "decision": decision,
+                    "score": round(score, 4),
+                    "threshold": round(threshold, 4),
+                    "top_features": top_features,
+                },
+                timeout=5.0,
+            )
+    except Exception:
+        pass
 
 
 def apply_feature_engineering(cv_data: Dict[str, Any]) -> pd.DataFrame:
@@ -178,7 +211,7 @@ def predict_fair_with_explanation(df_features: pd.DataFrame) -> Dict[str, Any]:
 
 
 @app.post("/process-cv")
-async def process_cv(file: UploadFile = File(...)):
+async def process_cv(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     """
     Endpoint principal pour traiter un fichier CV.
     Lit le fichier, extrait le texte, génère les features et renvoie la prédiction.
@@ -232,7 +265,17 @@ async def process_cv(file: UploadFile = File(...)):
     df_features = apply_feature_engineering(result)
     prediction_results = predict(df_features)
 
-    # 5. Enrichissement de la réponse JSON
+    # 5. Log en arrière-plan
+    background_tasks.add_task(
+        _log_decision,
+        filename=file.filename or "inconnu",
+        model="standard",
+        decision=prediction_results["decision"],
+        score=prediction_results["probability"],
+        threshold=prediction_results["threshold_used"],
+    )
+
+    # 6. Enrichissement de la réponse JSON
     result.update(prediction_results)
     result["computed_features"] = df_features.to_dict(orient="records")[0]
 
@@ -240,7 +283,7 @@ async def process_cv(file: UploadFile = File(...)):
 
 
 @app.post("/process-cv-fair")
-async def process_cv_fair(file: UploadFile = File(...)):
+async def process_cv_fair(file: UploadFile = File(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     """
     Endpoint Fair Model : utilise le modèle équitable (sans features discriminatoires)
     et retourne les explications détaillées de chaque décision.
@@ -290,7 +333,18 @@ async def process_cv_fair(file: UploadFile = File(...)):
     df_features = apply_feature_engineering(result)
     prediction_results = predict_fair_with_explanation(df_features)
 
-    # 5. Enrichissement de la réponse JSON
+    # 5. Log en arrière-plan
+    background_tasks.add_task(
+        _log_decision,
+        filename=file.filename or "inconnu",
+        model="fair",
+        decision=prediction_results["decision"],
+        score=prediction_results["probability"],
+        threshold=prediction_results["threshold_used"],
+        top_features=prediction_results.get("explanations", [])[:5],
+    )
+
+    # 6. Enrichissement de la réponse JSON
     result.update(prediction_results)
     result["computed_features"] = df_features.to_dict(orient="records")[0]
 

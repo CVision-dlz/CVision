@@ -1,7 +1,13 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { createClient } from "@supabase/supabase-js"
 
 const WEBHOOK_URL      = "https://n8n.dlzteam.com/webhook/process-cv"
 const WEBHOOK_FAIR_URL = "https://n8n.dlzteam.com/webhook/4f470f6b-2ab0-4480-8079-8572d0f4bb7f"
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
 
 // ─── Labels lisibles pour les features ─────────────────────────────────────
 const FEATURE_LABELS = {
@@ -337,6 +343,24 @@ export default function App() {
   const [resultFair, setResultFair]     = useState(null)
   const [errorFair, setErrorFair]       = useState(null)
   const [filenameFair, setFilenameFair] = useState(null)
+
+  // État onglet Historique
+  const [history, setHistory]           = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [expandedRow, setExpandedRow]   = useState(null)
+
+  async function fetchHistory() {
+    setHistoryLoading(true)
+    const { data } = await supabase
+      .from("cv_decisions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50)
+    setHistory(data || [])
+    setHistoryLoading(false)
+  }
+
+  useEffect(() => { if (activeTab === 2) fetchHistory() }, [activeTab])
 
   async function sendFile(file) {
     if (!file || !file.name.endsWith(".txt")) { setError("Veuillez envoyer un fichier .txt"); return }
@@ -938,6 +962,134 @@ export default function App() {
           padding-bottom: 6px;
           border-bottom: 1px solid #ede9e4;
         }
+
+        /* ── Historique ── */
+        .history-page {
+          padding: 48px 64px;
+          background: #f5f3ef;
+          min-height: 100%;
+        }
+        .history-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+        }
+        .history-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 28px;
+          color: #1a1a1a;
+          letter-spacing: -0.5px;
+        }
+        .history-sub {
+          font-size: 13px;
+          color: #a09890;
+          font-weight: 300;
+          margin-top: 4px;
+        }
+        .refresh-btn {
+          padding: 10px 22px;
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: #6b6560;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .refresh-btn:hover { background: #fdf9f4; border-color: #8b6f47; color: #8b6f47; }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .history-empty {
+          text-align: center;
+          color: #a09890;
+          font-size: 14px;
+          font-weight: 300;
+          padding: 80px 0;
+        }
+        .history-table-wrap {
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .history-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .history-table th {
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #a09890;
+          font-weight: 500;
+          padding: 16px 20px;
+          text-align: left;
+          border-bottom: 1px solid #e2ddd8;
+          background: #faf9f7;
+        }
+        .history-row {
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+        .history-row:hover { background: #faf9f7; }
+        .history-row.expanded { background: #fdf9f4; }
+        .history-row td {
+          padding: 16px 20px;
+          border-bottom: 1px solid #f0ede8;
+          font-size: 13px;
+          color: #1a1a1a;
+        }
+        .td-date { color: #6b6560; font-size: 12px; }
+        .td-time { color: #a09890; font-size: 11px; }
+        .td-file { font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .td-score { font-weight: 600; font-size: 14px; }
+        .td-threshold { color: #a09890; font-size: 12px; }
+        .td-expand { color: #a09890; font-size: 11px; text-align: right; }
+        .model-badge {
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          padding: 3px 10px;
+          border-radius: 100px;
+        }
+        .badge-fair { background: #edf7f0; color: #2d7a4f; border: 1px solid #c3e6d0; }
+        .badge-std  { background: #f0f0f7; color: #5a5a8b; border: 1px solid #d0d0e8; }
+        .decision-pill-sm {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 12px;
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 500;
+        }
+        .history-detail-row td {
+          background: #fdf9f4;
+          padding: 0 20px 16px 20px;
+          border-bottom: 1px solid #e2ddd8;
+        }
+        .history-features { padding: 4px 0; }
+        .history-features-title {
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #8b6f47;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+        .hf-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 4px 0;
+          font-size: 12px;
+          border-bottom: 1px solid #f0ede8;
+        }
+        .hf-name { color: #6b6560; }
+        .hf-val { font-weight: 600; font-size: 12px; }
       `}</style>
 
       <div className="page">
@@ -963,6 +1115,13 @@ export default function App() {
             <div className="tab-pip" />
             Analyse Équitable
             <span className="tab-fair-tag">FAIR</span>
+          </button>
+          <button
+            className={`tab-btn ${activeTab === 2 ? "active" : ""}`}
+            onClick={() => setActiveTab(2)}
+          >
+            <div className="tab-pip" />
+            Historique
           </button>
         </nav>
 
@@ -991,6 +1150,92 @@ export default function App() {
                 <ResultPanel result={result} filename={filename} />
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 2 && (
+          <div className="history-page">
+            <div className="history-header">
+              <div>
+                <div className="history-title">Historique des décisions</div>
+                <div className="history-sub">{history.length} décision{history.length !== 1 ? "s" : ""} enregistrée{history.length !== 1 ? "s" : ""}</div>
+              </div>
+              <button className="refresh-btn" onClick={fetchHistory} disabled={historyLoading}>
+                {historyLoading ? "Chargement…" : "↻ Actualiser"}
+              </button>
+            </div>
+
+            {historyLoading && history.length === 0 ? (
+              <div className="history-empty">Chargement…</div>
+            ) : history.length === 0 ? (
+              <div className="history-empty">Aucune décision enregistrée pour l'instant.</div>
+            ) : (
+              <div className="history-table-wrap">
+                <table className="history-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Fichier</th>
+                      <th>Modèle</th>
+                      <th>Décision</th>
+                      <th>Score</th>
+                      <th>Seuil</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((row) => {
+                      const isSelected = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+                      const date = new Date(row.created_at)
+                      const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })
+                      const timeStr = date.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })
+                      const isExpanded = expandedRow === row.id
+                      return (
+                        <>
+                          <tr key={row.id} className={`history-row ${isExpanded ? "expanded" : ""}`} onClick={() => setExpandedRow(isExpanded ? null : row.id)}>
+                            <td className="td-date">{dateStr}<br /><span className="td-time">{timeStr}</span></td>
+                            <td className="td-file">{row.filename}</td>
+                            <td>
+                              <span className={`model-badge ${row.model === "fair" ? "badge-fair" : "badge-std"}`}>
+                                {row.model === "fair" ? "FAIR" : "Standard"}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`decision-pill-sm ${isSelected ? "invite" : "reject"}`}>
+                                <span className="dot" />
+                                {isSelected ? "Sélectionné" : "Refusé"}
+                              </span>
+                            </td>
+                            <td className={`td-score ${isSelected ? "val-pos" : "val-neg"}`}>
+                              {(row.score * 100).toFixed(1)}%
+                            </td>
+                            <td className="td-threshold">{(row.threshold * 100).toFixed(1)}%</td>
+                            <td className="td-expand">{isExpanded ? "▲" : "▼"}</td>
+                          </tr>
+                          {isExpanded && row.top_features?.length > 0 && (
+                            <tr key={row.id + "-detail"} className="history-detail-row">
+                              <td colSpan={7}>
+                                <div className="history-features">
+                                  <div className="history-features-title">Top contributions (modèle FAIR)</div>
+                                  {row.top_features.map((f, i) => (
+                                    <div key={i} className="hf-row">
+                                      <span className="hf-name">{getLabel(f.feature)}</span>
+                                      <span className={`hf-val ${f.direction === "favorable" ? "val-pos" : "val-neg"}`}>
+                                        {f.contribution > 0 ? "+" : ""}{f.contribution.toFixed(3)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
