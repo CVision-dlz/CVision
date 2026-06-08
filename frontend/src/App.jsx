@@ -589,6 +589,11 @@ export default function App() {
   const [filterModel, setFilterModel]   = useState("all")
   const [filterDecision, setFilterDecision] = useState("all")
   const [searchQuery, setSearchQuery]   = useState("")
+  const [filterFavorites, setFilterFavorites] = useState(false)
+  const [favorites, setFavorites] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("cvision_favorites") || "[]")) }
+    catch { return new Set() }
+  })
 
   // Tab indicator
   const tabRef0 = useRef()
@@ -622,6 +627,28 @@ export default function App() {
       if (prev.find(r => r.id === row.id)) return prev.filter(r => r.id !== row.id)
       if (prev.length >= 2) return [prev[1], row]
       return [...prev, row]
+    })
+  }
+
+  function toggleFavorite(id) {
+    setFavorites(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      localStorage.setItem("cvision_favorites", JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  async function deleteRow(id) {
+    await supabase.from("cv_decisions").delete().eq("id", id)
+    setHistory(prev => prev.filter(r => r.id !== id))
+    setSelectedRows(prev => prev.filter(r => r.id !== id))
+    setFavorites(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      localStorage.setItem("cvision_favorites", JSON.stringify([...next]))
+      return next
     })
   }
 
@@ -679,6 +706,7 @@ export default function App() {
     if (filterModel !== "all" && row.model !== filterModel) return false
     if (filterDecision === "selected" && !sel) return false
     if (filterDecision === "rejected" && sel) return false
+    if (filterFavorites && !favorites.has(row.id)) return false
     if (searchQuery && !row.filename?.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   })
@@ -1764,7 +1792,34 @@ export default function App() {
         }
         .row-checkbox:hover { border-color: #0ea5e9; }
 
-        .history-row.selected-row { background: rgba(14,165,233,0.04); }
+        .history-row.selected-row { background: rgba(14,165,233,0.05); }
+        .history-row.fav-row { background: rgba(251,191,36,0.06); }
+
+        /* ── Row action buttons ── */
+        .td-actions {
+          white-space: nowrap;
+          text-align: right;
+          padding-right: 8px !important;
+        }
+        .row-action-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px 6px;
+          border-radius: 6px;
+          font-size: 14px;
+          transition: all 0.18s ease;
+          opacity: 0.25;
+          line-height: 1;
+        }
+        .history-row:hover .row-action-btn,
+        .star-btn.starred { opacity: 1; }
+        .star-btn { color: #94a3b8; }
+        .star-btn:hover { color: #fbbf24; background: rgba(251,191,36,0.12); }
+        .star-btn.starred { color: #fbbf24; }
+        .star-btn.starred:hover { color: #f59e0b; }
+        .trash-btn { color: #94a3b8; }
+        .trash-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
 
         /* ── Bouton comparer ── */
         .compare-btn {
@@ -1816,9 +1871,10 @@ export default function App() {
         .modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(26,26,26,0.55);
-          backdrop-filter: blur(6px);
-          z-index: 1000;
+          background: rgba(8,10,28,0.82);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          z-index: 9000;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2220,6 +2276,13 @@ export default function App() {
                     <button className={`filter-btn ${filterDecision === "selected" ? "active" : ""}`} onClick={() => setFilterDecision("selected")}>Sélectionnés</button>
                     <button className={`filter-btn ${filterDecision === "rejected" ? "active" : ""}`} onClick={() => setFilterDecision("rejected")}>Refusés</button>
                   </div>
+                  <button
+                    className={`filter-btn filter-btn-star ${filterFavorites ? "active" : ""}`}
+                    onClick={() => setFilterFavorites(f => !f)}
+                    style={{ background: filterFavorites ? "#fbbf24" : "#fff", border: "1px solid #e2e8f0", borderRadius: "100px", padding: "8px 16px" }}
+                  >
+                    ★ Favoris {favorites.size > 0 && `(${favorites.size})`}
+                  </button>
                   <span className="filter-results">{filteredHistory.length} résultat{filteredHistory.length !== 1 ? "s" : ""}</span>
                 </div>
 
@@ -2235,18 +2298,20 @@ export default function App() {
                         <th>Décision</th>
                         <th>Score</th>
                         <th>Seuil</th>
-                        <th></th>
+                        <th style={{ width: "80px" }}>Actions</th>
+                        <th style={{ width: "32px" }}></th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredHistory.length === 0 ? (
                         <tr>
-                          <td colSpan={8} style={{ textAlign: "center", padding: "40px", color: "#94a3b8", fontSize: "13px" }}>
+                          <td colSpan={9} style={{ textAlign: "center", padding: "40px", color: "#94a3b8", fontSize: "13px" }}>
                             Aucun résultat pour ces filtres.
                           </td>
                         </tr>
                       ) : filteredHistory.map((row) => {
                         const isRowSel = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+                        const isFav = favorites.has(row.id)
                         const date    = new Date(row.created_at)
                         const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })
                         const timeStr = date.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })
@@ -2255,7 +2320,7 @@ export default function App() {
                           <>
                             <tr
                               key={row.id}
-                              className={`history-row ${isExpanded ? "expanded" : ""} ${selectedRows.find(r => r.id === row.id) ? "selected-row" : ""}`}
+                              className={`history-row ${isExpanded ? "expanded" : ""} ${selectedRows.find(r => r.id === row.id) ? "selected-row" : ""} ${isFav ? "fav-row" : ""}`}
                               onClick={() => setExpandedRow(isExpanded ? null : row.id)}
                             >
                               <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
@@ -2297,11 +2362,27 @@ export default function App() {
                                 </div>
                               </td>
                               <td className="td-threshold">{(row.threshold * 100).toFixed(1)}%</td>
+                              <td className="td-actions" onClick={e => e.stopPropagation()}>
+                                <button
+                                  className={`row-action-btn star-btn ${isFav ? "starred" : ""}`}
+                                  onClick={() => toggleFavorite(row.id)}
+                                  title={isFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                                >
+                                  {isFav ? "★" : "☆"}
+                                </button>
+                                <button
+                                  className="row-action-btn trash-btn"
+                                  onClick={() => deleteRow(row.id)}
+                                  title="Supprimer"
+                                >
+                                  ✕
+                                </button>
+                              </td>
                               <td className="td-expand">{isExpanded ? "▲" : "▼"}</td>
                             </tr>
                             {isExpanded && row.top_features?.length > 0 && (
                               <tr key={row.id + "-detail"} className="history-detail-row">
-                                <td colSpan={8}>
+                                <td colSpan={9}>
                                   <HistoryFeatureDetail features={row.top_features} />
                                 </td>
                               </tr>
