@@ -294,6 +294,24 @@ function FairResultPanel({ result, filename }) {
   )
 }
 
+// ─── Splash screen ─────────────────────────────────────────────────────────
+function SplashScreen({ onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2400)
+    return () => clearTimeout(t)
+  }, [onDone])
+
+  return (
+    <div className="splash-overlay">
+      <div className="splash-content">
+        <div className="splash-logo">CV<span>ision</span></div>
+        <div className="splash-line-wrap"><div className="splash-line" /></div>
+        <div className="splash-sub">Screening IA</div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Détail features historique avec toggle ────────────────────────────────
 function HistoryFeatureDetail({ features, title }) {
   const [mathMode, setMathMode] = useState(false)
@@ -475,6 +493,7 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
 // ─── App principale ─────────────────────────────────────────────────────────
 export default function App() {
   const [activeTab, setActiveTab] = useState(0)
+  const [showSplash, setShowSplash] = useState(true)
 
   // État onglet Standard
   const [loading, setLoading]   = useState(false)
@@ -1507,13 +1526,117 @@ export default function App() {
           color: #6b6560;
         }
         .compare-diff-val { font-weight: 700; font-size: 15px; }
+
+        /* ── Splash screen ── */
+        .splash-overlay {
+          position: fixed;
+          inset: 0;
+          background: #faf9f7;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: splashFadeOut 0.7s cubic-bezier(0.4, 0, 0.2, 1) 1.7s forwards;
+        }
+        .splash-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .splash-logo {
+          font-family: 'DM Serif Display', serif;
+          font-size: 80px;
+          letter-spacing: -4px;
+          color: #1a1a1a;
+          opacity: 0;
+          animation: splashLogoIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+        }
+        .splash-logo span { color: #8b6f47; font-style: italic; }
+        .splash-line-wrap { overflow: hidden; margin: 14px 0 18px; }
+        .splash-line {
+          width: 56px;
+          height: 1.5px;
+          background: linear-gradient(90deg, transparent, #8b6f47, transparent);
+          transform: scaleX(0);
+          transform-origin: center;
+          animation: splashLineIn 0.6s ease-out 0.7s forwards;
+        }
+        .splash-sub {
+          font-size: 10px;
+          letter-spacing: 5px;
+          text-transform: uppercase;
+          color: #a09890;
+          font-weight: 500;
+          opacity: 0;
+          animation: splashSubIn 0.5s ease 1.1s forwards;
+        }
+        @keyframes splashLogoIn {
+          from { opacity: 0; transform: translateY(20px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes splashLineIn {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        @keyframes splashSubIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes splashFadeOut {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+        }
+
+        /* ── Logo aurora (header) ── */
+        .logo-aurora {
+          display: inline-block;
+          background: linear-gradient(135deg, #8b6f47 0%, #c4956a 30%, #e8c99a 50%, #c4956a 70%, #8b6f47 100%);
+          background-size: 250% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: logoAurora 4s ease infinite;
+        }
+        @keyframes logoAurora {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        /* ── Badge shimmer ── */
+        .badge-shimmer {
+          position: relative;
+          overflow: hidden;
+        }
+        .badge-shimmer::after {
+          content: '';
+          position: absolute;
+          top: 0; left: -120%;
+          width: 60%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85), transparent);
+          animation: badgeShimmer 4s ease-in-out 2.8s infinite;
+        }
+        @keyframes badgeShimmer {
+          0%   { left: -120%; }
+          35%  { left: 160%; }
+          100% { left: 160%; }
+        }
+
+        /* ── Blur fade-in sur les panels ── */
+        .main, .history-page {
+          animation: blurFadeIn 0.5s ease-out forwards;
+        }
+        @keyframes blurFadeIn {
+          from { opacity: 0; filter: blur(6px); transform: translateY(10px); }
+          to   { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
       `}</style>
 
       <div className="page">
         {/* Header */}
         <header className="header">
-          <div className="logo">CV<span>ision</span></div>
-          <div className="badge">Screening IA</div>
+          <div className="logo">CV<span className="logo-aurora">ision</span></div>
+          <div className="badge badge-shimmer">Screening IA</div>
         </header>
 
         {/* Onglets */}
@@ -1759,6 +1882,8 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
     </>
   )
 }
