@@ -378,6 +378,76 @@ function HistoryFeatureDetail({ features, title }) {
   )
 }
 
+// ─── Mail detail panel ─────────────────────────────────────────────────────
+function MailDetailPanel({ row }) {
+  const result = row.full_result
+  const isFair = row.model === "fair"
+  const isSelected = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+  const emailDate = row.email_date || row.created_at
+  const dateStr = emailDate ? new Date(emailDate).toLocaleDateString("fr-BE", { day: "2-digit", month: "long", year: "numeric" }) : ""
+  const timeStr = emailDate ? new Date(emailDate).toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" }) : ""
+
+  function getInitials(name, email) {
+    if (name) {
+      const parts = name.trim().split(" ")
+      return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase()
+    }
+    return email ? email.slice(0, 2).toUpperCase() : "??"
+  }
+
+  return (
+    <div>
+      <div className="mail-context-card result-reveal" style={{ animationDelay: "0ms" }}>
+        <div className="mail-from-row">
+          <div className="mail-avatar">{getInitials(row.sender_name, row.sender_email)}</div>
+          <div className="mail-from-info">
+            <div className="mail-sender-name">{row.sender_name || "Expéditeur inconnu"}</div>
+            <div className="mail-sender-email">{row.sender_email || ""}</div>
+          </div>
+          {dateStr && <div className="mail-context-date">{dateStr} à {timeStr}</div>}
+        </div>
+        {row.email_subject && (
+          <div className="mail-subject-line">
+            <span className="mail-subject-label">Objet :</span> {row.email_subject}
+          </div>
+        )}
+        {row.email_body && (
+          <details className="mail-body-details">
+            <summary>Voir le message original</summary>
+            <div className="mail-body-text">{row.email_body}</div>
+          </details>
+        )}
+      </div>
+
+      <div className="divider result-reveal" style={{ animationDelay: "60ms" }} />
+
+      <div className="result-reveal" style={{ animationDelay: "100ms" }}>
+        {result ? (
+          isFair
+            ? <FairResultPanel result={result} filename={row.filename} />
+            : <ResultPanel result={result} filename={row.filename} />
+        ) : (
+          <div>
+            <div className="result-filename">{row.filename}</div>
+            <div className={`decision-pill ${isSelected ? "invite" : "reject"}`} style={{ marginBottom: "16px" }}>
+              <div className="dot" />{row.decision}
+            </div>
+            {row.score != null && row.threshold != null && (
+              <ThresholdGauge probability={row.score} threshold={row.threshold} />
+            )}
+            {row.top_features?.length > 0 && (
+              <>
+                <div className="divider" style={{ margin: "20px 0" }} />
+                <HistoryFeatureDetail features={row.top_features} />
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Modal comparaison ──────────────────────────────────────────────────────
 function CompareModal({ rows, onClose }) {
   const [a, b] = rows
@@ -595,14 +665,21 @@ export default function App() {
     catch { return new Set() }
   })
 
+  // Mail tab
+  const [mailHistory, setMailHistory] = useState([])
+  const [mailLoading, setMailLoading] = useState(false)
+  const [activeMailRow, setActiveMailRow] = useState(null)
+  const [mailSearch, setMailSearch] = useState("")
+
   // Tab indicator
   const tabRef0 = useRef()
   const tabRef1 = useRef()
   const tabRef2 = useRef()
+  const tabRef3 = useRef()
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
 
   useEffect(() => {
-    const refs = [tabRef0, tabRef1, tabRef2]
+    const refs = [tabRef0, tabRef1, tabRef2, tabRef3]
     const btn = refs[activeTab]?.current
     if (!btn) return
     const nav = btn.closest(".tabs")
@@ -663,7 +740,23 @@ export default function App() {
     setHistoryLoading(false)
   }
 
-  useEffect(() => { if (activeTab === 2) fetchHistory() }, [activeTab])
+  async function fetchMailHistory() {
+    setMailLoading(true)
+    const { data } = await supabase
+      .from("cv_decisions")
+      .select("*")
+      .eq("source", "email")
+      .order("email_date", { ascending: false })
+      .limit(100)
+    setMailHistory(data || [])
+    if (data?.length > 0 && !activeMailRow) setActiveMailRow(data[0])
+    setMailLoading(false)
+  }
+
+  useEffect(() => {
+    if (activeTab === 2) fetchHistory()
+    if (activeTab === 3) fetchMailHistory()
+  }, [activeTab])
 
   async function sendFile(file) {
     if (!file || !file.name.endsWith(".txt")) { setError("Veuillez envoyer un fichier .txt"); return }
@@ -2085,12 +2178,148 @@ export default function App() {
         }
 
         /* ── Blur fade-in sur les panels ── */
-        .main, .history-page {
+        .main, .history-page, .mail-page {
           animation: blurFadeIn 0.5s ease-out forwards;
         }
         @keyframes blurFadeIn {
           from { opacity: 0; filter: blur(6px); transform: translateY(8px); }
           to   { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
+
+        /* ── Mail tab ── */
+        .mail-page {
+          display: grid;
+          grid-template-columns: 340px 1fr;
+          min-height: calc(100vh - 140px);
+          background: #f8f9fa;
+        }
+        .mail-sidebar {
+          border-right: 1px solid #e2e8f0;
+          display: flex;
+          flex-direction: column;
+          background: #ffffff;
+          overflow: hidden;
+        }
+        .mail-sidebar-header {
+          padding: 32px 24px 20px;
+          border-bottom: 1px solid #e2e8f0;
+          flex-shrink: 0;
+        }
+        .mail-list { overflow-y: auto; flex: 1; max-height: calc(100vh - 280px); }
+        .mail-empty {
+          padding: 48px 24px;
+          text-align: center;
+          color: #94a3b8;
+          font-size: 13px;
+          font-weight: 300;
+          line-height: 1.7;
+        }
+        .mail-item {
+          display: flex;
+          gap: 12px;
+          padding: 14px 20px;
+          border-bottom: 1px solid #f1f5f9;
+          cursor: pointer;
+          transition: background 0.15s ease;
+          align-items: flex-start;
+          border-left: 3px solid transparent;
+        }
+        .mail-item:hover { background: #f8f9fa; }
+        .mail-item-active {
+          background: #f0f9ff !important;
+          border-left-color: #0ea5e9;
+        }
+        .mail-item-avatar {
+          width: 38px; height: 38px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          font-weight: 600;
+          flex-shrink: 0;
+          letter-spacing: 0.5px;
+        }
+        .avatar-sel { background: #dcfce7; color: #16a34a; }
+        .avatar-rej { background: #fee2e2; color: #dc2626; }
+        .mail-item-content { flex: 1; min-width: 0; }
+        .mail-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .mail-item-sender { font-size: 13px; font-weight: 500; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+        .mail-item-date { font-size: 11px; color: #94a3b8; flex-shrink: 0; margin-left: 6px; }
+        .mail-item-subject { font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
+        .mail-item-meta { display: flex; gap: 6px; align-items: center; }
+        .decision-pill-sm {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 2px 8px;
+          border-radius: 100px;
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: 0.4px;
+        }
+        .decision-pill-sm.invite { background: #dcfce7; color: #16a34a; }
+        .decision-pill-sm.reject { background: #fee2e2; color: #dc2626; }
+        .decision-pill-sm .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+        .mail-detail {
+          padding: 48px 56px;
+          overflow-y: auto;
+          max-height: calc(100vh - 140px);
+        }
+
+        /* Mail context card */
+        .mail-context-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 22px 26px;
+          margin-bottom: 4px;
+        }
+        .mail-from-row {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 14px;
+        }
+        .mail-avatar {
+          width: 44px; height: 44px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .mail-from-info { flex: 1; min-width: 0; }
+        .mail-sender-name { font-size: 15px; font-weight: 500; color: #0f172a; }
+        .mail-sender-email { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+        .mail-context-date { font-size: 11px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
+        .mail-subject-line { font-size: 13px; color: #64748b; margin-bottom: 10px; }
+        .mail-subject-label { font-weight: 500; color: #0f172a; }
+        .mail-body-details summary {
+          font-size: 11px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: #94a3b8;
+          cursor: pointer;
+          user-select: none;
+        }
+        .mail-body-text {
+          margin-top: 10px;
+          font-size: 13px;
+          color: #64748b;
+          font-weight: 300;
+          line-height: 1.7;
+          white-space: pre-wrap;
+          background: #f8f9fa;
+          padding: 14px 18px;
+          border-radius: 8px;
+          max-height: 200px;
+          overflow-y: auto;
         }
       `}</style>
 
@@ -2131,6 +2360,15 @@ export default function App() {
           >
             <div className="tab-pip" />
             Dashboard RH
+          </button>
+          <button
+            ref={tabRef3}
+            className={`tab-btn ${activeTab === 3 ? "active" : ""}`}
+            onClick={() => setActiveTab(3)}
+          >
+            <div className="tab-pip" />
+            Mail
+            <span className="tab-fair-tag" style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9" }}>AUTO</span>
           </button>
         </nav>
 
@@ -2398,6 +2636,91 @@ export default function App() {
             {showCompare && selectedRows.length === 2 && (
               <CompareModal rows={selectedRows} onClose={() => setShowCompare(false)} />
             )}
+          </div>
+        )}
+
+        {activeTab === 3 && (
+          <div className="mail-page">
+            <div className="mail-sidebar">
+              <div className="mail-sidebar-header">
+                <div className="history-title">Analyse Mail</div>
+                <div className="history-sub">
+                  {mailHistory.length} CV reçu{mailHistory.length !== 1 ? "s" : ""} par email
+                </div>
+                <input
+                  className="search-input"
+                  placeholder="Rechercher un candidat…"
+                  value={mailSearch}
+                  onChange={e => setMailSearch(e.target.value)}
+                  style={{ marginTop: "14px", width: "100%", boxSizing: "border-box" }}
+                />
+              </div>
+              <div className="mail-list">
+                {mailLoading && <div className="mail-empty">Chargement…</div>}
+                {!mailLoading && mailHistory.length === 0 && (
+                  <div className="mail-empty">
+                    Aucun CV reçu par email.
+                    <span style={{ fontSize: "12px", marginTop: "10px", display: "block", lineHeight: 1.7 }}>
+                      Configurez n8n pour surveiller votre boîte mail et les CVs apparaîtront ici automatiquement.
+                    </span>
+                  </div>
+                )}
+                {mailHistory
+                  .filter(r =>
+                    !mailSearch ||
+                    r.sender_name?.toLowerCase().includes(mailSearch.toLowerCase()) ||
+                    r.sender_email?.toLowerCase().includes(mailSearch.toLowerCase()) ||
+                    r.email_subject?.toLowerCase().includes(mailSearch.toLowerCase()) ||
+                    r.filename?.toLowerCase().includes(mailSearch.toLowerCase())
+                  )
+                  .map(row => {
+                    const isSel = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+                    const isActive = activeMailRow?.id === row.id
+                    const date = new Date(row.email_date || row.created_at)
+                    const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit" })
+                    const n = row.sender_name
+                    const initials = n
+                      ? (() => { const p = n.trim().split(" "); return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : p[0].slice(0, 2).toUpperCase() })()
+                      : row.sender_email ? row.sender_email.slice(0, 2).toUpperCase() : "??"
+                    return (
+                      <div
+                        key={row.id}
+                        className={`mail-item${isActive ? " mail-item-active" : ""}`}
+                        onClick={() => setActiveMailRow(row)}
+                      >
+                        <div className={`mail-item-avatar ${isSel ? "avatar-sel" : "avatar-rej"}`}>{initials}</div>
+                        <div className="mail-item-content">
+                          <div className="mail-item-header">
+                            <span className="mail-item-sender">{row.sender_name || row.sender_email || "Inconnu"}</span>
+                            <span className="mail-item-date">{dateStr}</span>
+                          </div>
+                          <div className="mail-item-subject">{row.email_subject || row.filename || "Sans objet"}</div>
+                          <div className="mail-item-meta">
+                            <span className={`decision-pill-sm ${isSel ? "invite" : "reject"}`}>
+                              <span className="dot" />{isSel ? "Sélectionné" : "Refusé"}
+                            </span>
+                            <span className={`model-badge ${row.model === "fair" ? "badge-fair" : "badge-std"}`}>
+                              {row.model === "fair" ? "FAIR" : "Standard"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                }
+              </div>
+            </div>
+
+            <div className="mail-detail" key={activeMailRow?.id}>
+              {!activeMailRow ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📧</div>
+                  <div className="empty-text">Sélectionnez un email pour voir l'analyse</div>
+                </div>
+              ) : (
+                <MailDetailPanel row={activeMailRow} />
+              )}
+            </div>
           </div>
         )}
       </div>
