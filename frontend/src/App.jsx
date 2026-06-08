@@ -9,7 +9,6 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 )
 
-// ─── Labels lisibles pour les features ─────────────────────────────────────
 const FEATURE_LABELS = {
   education_score:         "Prestige de l'école",
   total_experience_years:  "Années d'expérience",
@@ -33,6 +32,14 @@ const FEATURE_CATEGORIES = {
   "Compétences":  ["skills_count", "skills"],
   "Langues":      ["lang_fr", "lang_en", "lang_other_score_sum"],
 }
+
+const ANALYSIS_STEPS = [
+  "Lecture du fichier…",
+  "Extraction des données…",
+  "Analyse des compétences…",
+  "Calcul du score de confiance…",
+  "Génération de la synthèse RH…",
+]
 
 function getLabel(feature) {
   return FEATURE_LABELS[feature] || feature.replace(/_/g, " ")
@@ -58,7 +65,6 @@ function generateSummary(explanations, decision) {
   const sorted = [...explanations].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
   const top2pos = sorted.filter(e => e.direction === "favorable").slice(0, 2).map(e => getLabel(e.feature))
   const top2neg = sorted.filter(e => e.direction === "défavorable").slice(0, 2).map(e => getLabel(e.feature))
-
   if (isSelected) {
     return top2pos.length
       ? `Ce candidat est retenu, notamment grâce à : ${top2pos.join(" et ")}.${top2neg.length ? ` Point(s) de vigilance : ${top2neg.join(", ")}.` : ""}`
@@ -68,6 +74,25 @@ function generateSummary(explanations, decision) {
       ? `Ce candidat n'est pas retenu. Principaux freins : ${top2neg.join(" et ")}.${top2pos.length ? ` Points positifs : ${top2pos.join(", ")}.` : ""}`
       : "Ce candidat n'est pas retenu par le modèle équitable."
   }
+}
+
+function useCountUp(target, duration = 900) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!target) { setValue(0); return }
+    let cancelled = false
+    let start = null
+    function step(ts) {
+      if (cancelled) return
+      if (!start) start = ts
+      const p = Math.min((ts - start) / duration, 1)
+      setValue(Math.round(p * target))
+      if (p < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+    return () => { cancelled = true }
+  }, [target, duration])
+  return value
 }
 
 // ─── Jauge seuil de décision ────────────────────────────────────────────────
@@ -88,7 +113,7 @@ function ThresholdGauge({ probability, threshold }) {
       <div className="tg-bar-outer">
         <div
           className={`tg-fill ${isSelected ? "tg-fill-pos" : "tg-fill-neg"}`}
-          style={{ width: `${probPct}%` }}
+          style={{ "--tg-width": `${probPct}%` }}
         />
         <div className="tg-threshold-line" style={{ left: `${threshPct}%` }}>
           <div className="tg-threshold-tick" />
@@ -102,7 +127,7 @@ function ThresholdGauge({ probability, threshold }) {
   )
 }
 
-// ─── Barres de contribution groupées par catégorie ──────────────────────────
+// ─── Barres de contribution groupées ────────────────────────────────────────
 function CategorizedBars({ explanations }) {
   const [mathMode, setMathMode] = useState(false)
   if (!explanations?.length) return null
@@ -115,6 +140,7 @@ function CategorizedBars({ explanations }) {
     grouped[cat].push(e)
   }
 
+  let globalIdx = 0
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
@@ -129,11 +155,16 @@ function CategorizedBars({ explanations }) {
             const pct = maxAbs > 0 ? (Math.abs(e.contribution) / maxAbs) * 100 : 0
             const pos = e.direction === "favorable"
             const impact = getImpactLabel(Math.abs(e.contribution))
+            const idx = globalIdx++
+            const isDecisive = Math.abs(e.contribution) > 0.5
             return (
-              <div key={i} className="expl-row">
+              <div key={i} className={`expl-row${isDecisive ? " expl-decisive" : ""}`}>
                 <div className="expl-name" title={e.feature}>{getLabel(e.feature)}</div>
                 <div className="expl-bar-wrap">
-                  <div className={`expl-bar ${pos ? "bar-pos" : "bar-neg"}`} style={{ width: `${pct}%` }} />
+                  <div
+                    className={`expl-bar ${pos ? "bar-pos" : "bar-neg"}`}
+                    style={{ "--bar-width": `${pct}%`, animationDelay: `${idx * 70}ms` }}
+                  />
                 </div>
                 <div className={`impact-label ${pos ? "val-pos" : "val-neg"}`}>
                   {mathMode
@@ -150,18 +181,18 @@ function CategorizedBars({ explanations }) {
   )
 }
 
-// ─── Panel de résultats standard ───────────────────────────────────────────
+// ─── Panel résultats standard ───────────────────────────────────────────────
 function ResultPanel({ result, filename }) {
   const isInvite = result?.decision === "Inviter"
   return (
     <div>
-      <div className="result-filename">{filename}</div>
-      <div className="result-name">{result.name}</div>
-      <div className={`decision-pill ${isInvite ? "invite" : "reject"}`}>
+      <div className="result-filename result-reveal" style={{ animationDelay: "0ms" }}>{filename}</div>
+      <div className="result-name result-reveal" style={{ animationDelay: "60ms" }}>{result.name}</div>
+      <div className={`decision-pill ${isInvite ? "invite" : "reject"} result-reveal`} style={{ animationDelay: "120ms" }}>
         <div className="dot" />
         {result.decision}
       </div>
-      <div className="grid-info">
+      <div className="grid-info result-reveal" style={{ animationDelay: "200ms" }}>
         <div className="info-card">
           <div className="info-label">Âge</div>
           <div className="info-value">{result.age} ans</div>
@@ -179,16 +210,20 @@ function ResultPanel({ result, filename }) {
           <div className="info-value" style={{ fontSize: "14px", paddingTop: "2px" }}>{result.education?.degree}</div>
         </div>
       </div>
-      <div className="section-label">Compétences</div>
-      <div className="tags">
-        {result.skills?.slice(0, 10).map((s, i) => <span key={i} className="tag">{s}</span>)}
+      <div className="section-label result-reveal" style={{ animationDelay: "280ms" }}>Compétences</div>
+      <div className="tags result-reveal" style={{ animationDelay: "320ms" }}>
+        {result.skills?.slice(0, 10).map((s, i) => (
+          <span key={i} className="tag tag-reveal" style={{ animationDelay: `${320 + i * 40}ms` }}>{s}</span>
+        ))}
       </div>
-      <div className="section-label">Langues</div>
-      <div className="tags">
-        {result.languages?.map((l, i) => <span key={i} className="tag">{l.language} — {l.level}</span>)}
+      <div className="section-label result-reveal" style={{ animationDelay: "560ms" }}>Langues</div>
+      <div className="tags result-reveal" style={{ animationDelay: "600ms" }}>
+        {result.languages?.map((l, i) => (
+          <span key={i} className="tag tag-reveal" style={{ animationDelay: `${600 + i * 40}ms` }}>{l.language} — {l.level}</span>
+        ))}
       </div>
-      <div className="divider" />
-      <details>
+      <div className="divider result-reveal" style={{ animationDelay: "680ms" }} />
+      <details className="result-reveal" style={{ animationDelay: "720ms" }}>
         <summary>Voir le JSON complet</summary>
         <pre>{JSON.stringify(result, null, 2)}</pre>
       </details>
@@ -196,40 +231,37 @@ function ResultPanel({ result, filename }) {
   )
 }
 
-// ─── Panel de résultats FAIR avec explications ─────────────────────────────
+// ─── Panel résultats FAIR ───────────────────────────────────────────────────
 function FairResultPanel({ result, filename }) {
   const isInvite = result?.decision?.includes("Sélectionné") || result?.decision === "Inviter"
   const summary  = generateSummary(result.explanations, result.decision)
 
   return (
     <div>
-      <div className="result-filename">{filename}</div>
-      <div className="result-name">{result.name}</div>
+      <div className="result-filename result-reveal" style={{ animationDelay: "0ms" }}>{filename}</div>
+      <div className="result-name result-reveal" style={{ animationDelay: "60ms" }}>{result.name}</div>
 
-      <div className={`decision-pill ${isInvite ? "invite" : "reject"}`}>
+      <div className={`decision-pill ${isInvite ? "invite" : "reject"} result-reveal`} style={{ animationDelay: "120ms" }}>
         <div className="dot" />
         {result.decision}
       </div>
 
-      {/* Résumé textuel auto-généré */}
       {summary && (
-        <div className={`summary-block ${isInvite ? "summary-pos" : "summary-neg"}`}>
+        <div className={`summary-block ${isInvite ? "summary-pos" : "summary-neg"} result-reveal`} style={{ animationDelay: "200ms" }}>
           {summary}
         </div>
       )}
 
-      <div className="divider" />
+      <div className="divider result-reveal" style={{ animationDelay: "260ms" }} />
 
-      {/* Jauge seuil de décision */}
       {result.probability != null && result.threshold_used != null && (
-        <>
+        <div className="result-reveal" style={{ animationDelay: "320ms" }}>
           <ThresholdGauge probability={result.probability} threshold={result.threshold_used} />
           <div className="divider" />
-        </>
+        </div>
       )}
 
-      {/* Métriques candidat */}
-      <div className="grid-info">
+      <div className="grid-info result-reveal" style={{ animationDelay: "400ms" }}>
         <div className="info-card">
           <div className="info-label">Âge</div>
           <div className="info-value">{result.age} ans</div>
@@ -258,19 +290,22 @@ function FairResultPanel({ result, filename }) {
         )}
       </div>
 
-      <div className="section-label">Compétences</div>
-      <div className="tags">
-        {result.skills?.slice(0, 10).map((s, i) => <span key={i} className="tag">{s}</span>)}
+      <div className="section-label result-reveal" style={{ animationDelay: "480ms" }}>Compétences</div>
+      <div className="tags result-reveal" style={{ animationDelay: "520ms" }}>
+        {result.skills?.slice(0, 10).map((s, i) => (
+          <span key={i} className="tag tag-reveal" style={{ animationDelay: `${520 + i * 40}ms` }}>{s}</span>
+        ))}
       </div>
 
-      <div className="section-label">Langues</div>
-      <div className="tags">
-        {result.languages?.map((l, i) => <span key={i} className="tag">{l.language} — {l.level}</span>)}
+      <div className="section-label result-reveal" style={{ animationDelay: "760ms" }}>Langues</div>
+      <div className="tags result-reveal" style={{ animationDelay: "800ms" }}>
+        {result.languages?.map((l, i) => (
+          <span key={i} className="tag tag-reveal" style={{ animationDelay: `${800 + i * 40}ms` }}>{l.language} — {l.level}</span>
+        ))}
       </div>
 
-      {/* Explications catégorisées */}
       {result.explanations?.length > 0 && (
-        <>
+        <div className="result-reveal" style={{ animationDelay: "880ms" }}>
           <div className="divider" />
           <div className="fair-explain-header">
             <div className="fair-explain-title">Pourquoi cette décision ?</div>
@@ -282,11 +317,11 @@ function FairResultPanel({ result, filename }) {
           <div className="fair-note">
             Modèle équitable : âge, distance et langues d'origine exclus. Décision basée uniquement sur les compétences, l'expérience et la formation.
           </div>
-        </>
+        </div>
       )}
 
-      <div className="divider" />
-      <details>
+      <div className="divider result-reveal" style={{ animationDelay: "960ms" }} />
+      <details className="result-reveal" style={{ animationDelay: "1000ms" }}>
         <summary>Voir le JSON complet</summary>
         <pre>{JSON.stringify(result, null, 2)}</pre>
       </details>
@@ -294,7 +329,7 @@ function FairResultPanel({ result, filename }) {
   )
 }
 
-// ─── Splash screen ─────────────────────────────────────────────────────────
+// ─── Splash screen ──────────────────────────────────────────────────────────
 function SplashScreen({ onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 3200)
@@ -314,7 +349,7 @@ function SplashScreen({ onDone }) {
   )
 }
 
-// ─── Détail features historique avec toggle ────────────────────────────────
+// ─── Détail features historique ─────────────────────────────────────────────
 function HistoryFeatureDetail({ features, title }) {
   const [mathMode, setMathMode] = useState(false)
   return (
@@ -343,7 +378,7 @@ function HistoryFeatureDetail({ features, title }) {
   )
 }
 
-// ─── Modal comparaison ─────────────────────────────────────────────────────
+// ─── Modal comparaison ──────────────────────────────────────────────────────
 function CompareModal({ rows, onClose }) {
   const [a, b] = rows
   const [mathMode, setMathMode] = useState(false)
@@ -441,10 +476,24 @@ function CompareModal({ rows, onClose }) {
   )
 }
 
-// ─── Dropzone réutilisable (style Aceternity) ──────────────────────────────
+// ─── Dropzone (Aceternity style + loading steps) ─────────────────────────────
 function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, desc }) {
   const [dragging, setDragging] = useState(false)
+  const [stepIdx, setStepIdx] = useState(0)
+  const [stepDone, setStepDone] = useState([])
   const inputRef = useRef()
+
+  useEffect(() => {
+    if (!loading) { setStepIdx(0); setStepDone([]); return }
+    const t = setInterval(() => {
+      setStepIdx(i => {
+        const next = Math.min(i + 1, ANALYSIS_STEPS.length - 1)
+        setStepDone(d => [...d, i])
+        return next
+      })
+    }, 620)
+    return () => clearInterval(t)
+  }, [loading])
 
   function onDrop(e) {
     e.preventDefault()
@@ -463,30 +512,37 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        onClick={() => inputRef.current.click()}
+        onClick={() => !loading && inputRef.current.click()}
       >
         <input ref={inputRef} type="file" accept=".txt" style={{ display: "none" }}
           onChange={(e) => onFile(e.target.files[0])} />
         <div className="dz-grid-bg" />
         <div className="dz-inner">
           {loading ? (
-            <>
-              <div className="dz-spin" />
-              <div className="dz-label-title">Analyse en cours…</div>
-              <div className="dz-label-sub">{filename}</div>
-            </>
+            <div className="dz-steps-wrap">
+              <div className="dz-spin" style={{ marginBottom: "20px" }} />
+              {ANALYSIS_STEPS.map((step, i) => (
+                <div
+                  key={i}
+                  className={`dz-step ${i < stepIdx || stepDone.includes(i) ? "dz-step-done" : i === stepIdx ? "dz-step-active" : "dz-step-pending"}`}
+                >
+                  <span className="dz-step-icon">
+                    {stepDone.includes(i) ? "✓" : i === stepIdx ? "→" : "·"}
+                  </span>
+                  {step}
+                </div>
+              ))}
+            </div>
           ) : filename ? (
-            <>
-              <div className="dz-file-display">
-                <div className="dz-file-card">
-                  <span style={{ fontSize: "22px" }}>📄</span>
-                  <div>
-                    <div className="dz-file-name">{filename}</div>
-                    <div className="dz-file-ok">Fichier prêt · cliquez pour changer</div>
-                  </div>
+            <div className="dz-file-display">
+              <div className="dz-file-card">
+                <span style={{ fontSize: "22px" }}>📄</span>
+                <div>
+                  <div className="dz-file-name">{filename}</div>
+                  <div className="dz-file-ok">Fichier prêt · cliquez pour changer</div>
                 </div>
               </div>
-            </>
+            </div>
           ) : (
             <>
               <div className={`dz-float-wrap ${dragging ? "dz-floating-drag" : ""}`}>
@@ -515,19 +571,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState(0)
   const [showSplash, setShowSplash] = useState(true)
 
-  // État onglet Standard
   const [loading, setLoading]   = useState(false)
   const [result, setResult]     = useState(null)
   const [error, setError]       = useState(null)
   const [filename, setFilename] = useState(null)
 
-  // État onglet Fair
   const [loadingFair, setLoadingFair]   = useState(false)
   const [resultFair, setResultFair]     = useState(null)
   const [errorFair, setErrorFair]       = useState(null)
   const [filenameFair, setFilenameFair] = useState(null)
 
-  // État onglet Historique
   const [history, setHistory]           = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [expandedRow, setExpandedRow]   = useState(null)
@@ -536,6 +589,33 @@ export default function App() {
   const [filterModel, setFilterModel]   = useState("all")
   const [filterDecision, setFilterDecision] = useState("all")
   const [searchQuery, setSearchQuery]   = useState("")
+
+  // Tab indicator
+  const tabRef0 = useRef()
+  const tabRef1 = useRef()
+  const tabRef2 = useRef()
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
+
+  useEffect(() => {
+    const refs = [tabRef0, tabRef1, tabRef2]
+    const btn = refs[activeTab]?.current
+    if (!btn) return
+    const nav = btn.closest(".tabs")
+    if (!nav) return
+    const navRect = nav.getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    setTabIndicator({ left: btnRect.left - navRect.left, width: btnRect.width })
+  }, [activeTab, showSplash])
+
+  // Mouse halo
+  useEffect(() => {
+    const handleMove = (e) => {
+      document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`)
+      document.documentElement.style.setProperty("--mouse-y", `${e.clientY}px`)
+    }
+    window.addEventListener("mousemove", handleMove)
+    return () => window.removeEventListener("mousemove", handleMove)
+  }, [])
 
   function toggleSelect(row) {
     setSelectedRows(prev => {
@@ -585,6 +665,15 @@ export default function App() {
   const totalSelected = history.filter(r => r.decision?.includes("Sélectionné") || r.decision === "Inviter").length
   const totalFair     = history.filter(r => r.model === "fair").length
   const selectRate    = history.length > 0 ? Math.round(totalSelected / history.length * 100) : 0
+  const avgScoreSelected = totalSelected > 0
+    ? history.filter(r => r.decision?.includes("Sélectionné") || r.decision === "Inviter")
+             .reduce((s, r) => s + (r.score || 0), 0) / totalSelected
+    : 0
+
+  const insightText = history.length > 0
+    ? `Sur les ${history.length} CV analysé${history.length > 1 ? "s" : ""}, ${selectRate}% sont sélectionnés. Les analyses FAIR représentent ${Math.round(totalFair / history.length * 100)}% des décisions.${totalSelected > 0 ? ` Score moyen des candidats retenus : ${(avgScoreSelected * 100).toFixed(0)}%.` : ""}`
+    : null
+
   const filteredHistory = history.filter(row => {
     const sel = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
     if (filterModel !== "all" && row.model !== filterModel) return false
@@ -594,12 +683,23 @@ export default function App() {
     return true
   })
 
+  // Count-up KPI (hooks must be unconditional)
+  const kpiTotal    = useCountUp(history.length)
+  const kpiSelected = useCountUp(totalSelected)
+  const kpiRejected = useCountUp(history.length - totalSelected)
+  const kpiFair     = useCountUp(totalFair)
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --mouse-x: 50vw;
+          --mouse-y: 50vh;
+        }
 
         body {
           background: #f5f3ef;
@@ -612,6 +712,21 @@ export default function App() {
           min-height: 100vh;
           display: grid;
           grid-template-rows: auto auto 1fr;
+          position: relative;
+        }
+
+        /* Mouse halo */
+        .page::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+          background: radial-gradient(
+            700px circle at var(--mouse-x) var(--mouse-y),
+            rgba(139,111,71,0.06),
+            transparent 42%
+          );
         }
 
         .header {
@@ -620,7 +735,10 @@ export default function App() {
           align-items: center;
           justify-content: space-between;
           border-bottom: 1px solid #e2ddd8;
-          background: #faf9f7;
+          background: rgba(250,249,247,0.92);
+          backdrop-filter: blur(12px);
+          position: relative;
+          z-index: 10;
         }
 
         .logo {
@@ -647,10 +765,23 @@ export default function App() {
         /* ── Onglets ── */
         .tabs {
           display: flex;
-          background: #faf9f7;
+          background: rgba(250,249,247,0.92);
+          backdrop-filter: blur(12px);
           border-bottom: 1px solid #e2ddd8;
           padding: 0 56px;
           gap: 0;
+          position: relative;
+          z-index: 10;
+        }
+
+        .tab-indicator-line {
+          position: absolute;
+          bottom: 0;
+          height: 2px;
+          background: linear-gradient(90deg, transparent 0%, #8b6f47 30%, #c4956a 50%, #8b6f47 70%, transparent 100%);
+          transition: left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+          border-radius: 2px;
+          box-shadow: 0 0 8px rgba(139,111,71,0.4);
         }
 
         .tab-btn {
@@ -664,7 +795,7 @@ export default function App() {
           border: none;
           border-bottom: 2px solid transparent;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: color 0.2s ease;
           display: flex;
           align-items: center;
           gap: 8px;
@@ -674,7 +805,6 @@ export default function App() {
 
         .tab-btn.active {
           color: #1a1a1a;
-          border-bottom-color: #8b6f47;
         }
 
         .tab-pip {
@@ -683,11 +813,13 @@ export default function App() {
           border-radius: 50%;
           background: currentColor;
           opacity: 0.5;
+          transition: all 0.2s ease;
         }
 
         .tab-btn.active .tab-pip {
           background: #8b6f47;
           opacity: 1;
+          box-shadow: 0 0 6px rgba(139,111,71,0.5);
         }
 
         .tab-fair-tag {
@@ -706,6 +838,8 @@ export default function App() {
         .main {
           display: grid;
           grid-template-columns: 480px 1fr;
+          position: relative;
+          z-index: 1;
         }
 
         .left {
@@ -717,6 +851,13 @@ export default function App() {
           border-right: 1px solid #e2ddd8;
         }
 
+        .tab-bg-0 .left {
+          background: linear-gradient(155deg, rgba(139,111,71,0.07) 0%, #faf9f7 38%);
+        }
+        .tab-bg-1 .left {
+          background: linear-gradient(155deg, rgba(45,122,79,0.07) 0%, #faf9f7 38%);
+        }
+
         .eyebrow {
           font-size: 11px;
           letter-spacing: 3px;
@@ -724,6 +865,25 @@ export default function App() {
           color: #8b6f47;
           font-weight: 500;
           margin-bottom: 20px;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .eyebrow::after {
+          content: '';
+          display: inline-block;
+          width: 28px;
+          height: 1px;
+          background: #8b6f47;
+          margin-left: 10px;
+          flex-shrink: 0;
+          transform-origin: left;
+          animation: eyebrowLine 0.9s ease 0.4s both;
+        }
+
+        @keyframes eyebrowLine {
+          from { transform: scaleX(0); opacity: 0; }
+          to   { transform: scaleX(1); opacity: 1; }
         }
 
         .headline {
@@ -769,6 +929,28 @@ export default function App() {
           background: #fdf9f4;
           box-shadow: 0 0 0 5px rgba(139,111,71,0.09) !important;
         }
+
+        /* Scan line on drag */
+        .dz-ace-drag::after {
+          content: '';
+          position: absolute;
+          left: 10%;
+          right: 10%;
+          height: 2px;
+          top: 0;
+          background: linear-gradient(90deg, transparent, rgba(139,111,71,0.9), transparent);
+          box-shadow: 0 0 14px rgba(139,111,71,0.4);
+          animation: scanLine 1.1s ease-in-out infinite;
+          border-radius: 1px;
+          pointer-events: none;
+        }
+        @keyframes scanLine {
+          0%   { transform: translateY(0);    opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { transform: translateY(280px); opacity: 0; }
+        }
+
         .dz-grid-bg {
           position: absolute;
           inset: 0;
@@ -846,9 +1028,47 @@ export default function App() {
           border-top-color: #8b6f47;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
-          margin-bottom: 2px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Loading steps */
+        .dz-steps-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+          width: 100%;
+          max-width: 260px;
+        }
+        .dz-step {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 12px;
+          transition: all 0.3s ease;
+          font-weight: 400;
+        }
+        .dz-step-done {
+          color: #2d7a4f;
+          opacity: 0.7;
+        }
+        .dz-step-active {
+          color: #1a1a1a;
+          font-weight: 500;
+        }
+        .dz-step-pending {
+          color: #c0b8b0;
+        }
+        .dz-step-icon {
+          font-size: 11px;
+          width: 14px;
+          text-align: center;
+          font-weight: 700;
+          color: inherit;
+        }
+        .dz-step-done .dz-step-icon { color: #2d7a4f; }
+        .dz-step-active .dz-step-icon { color: #8b6f47; }
+
         .dz-file-display { animation: fileIn 0.45s cubic-bezier(0.16,1,0.3,1); }
         @keyframes fileIn {
           from { opacity: 0; transform: scale(0.88) translateY(10px); }
@@ -880,6 +1100,7 @@ export default function App() {
           padding: 72px 64px;
           overflow-y: auto;
           background: #f5f3ef;
+          position: relative;
         }
 
         .empty-state {
@@ -899,6 +1120,26 @@ export default function App() {
           font-family: 'DM Serif Display', serif;
           font-size: 20px;
           color: #1a1a1a;
+        }
+
+        /* ── Cascade reveal ── */
+        .result-reveal {
+          opacity: 0;
+          transform: translateY(12px);
+          animation: revealUp 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes revealUp {
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Tag stagger ── */
+        .tag-reveal {
+          opacity: 0;
+          animation: tagReveal 0.38s ease forwards;
+        }
+        @keyframes tagReveal {
+          from { opacity: 0; transform: scale(0.85) translateY(4px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .result-filename {
@@ -927,6 +1168,11 @@ export default function App() {
           font-weight: 500;
           letter-spacing: 0.5px;
           margin-bottom: 36px;
+          animation: pillPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        @keyframes pillPop {
+          from { transform: scale(0.82); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
         }
 
         .decision-pill.invite {
@@ -966,6 +1212,11 @@ export default function App() {
           border: 1px solid #e2ddd8;
           border-radius: 12px;
           padding: 16px 20px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .info-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(26,26,26,0.06);
         }
 
         .info-label {
@@ -1006,6 +1257,12 @@ export default function App() {
           background: #fff;
           color: #6b6560;
           border: 1px solid #e2ddd8;
+          transition: all 0.2s ease;
+        }
+        .tag:hover {
+          border-color: #8b6f47;
+          color: #8b6f47;
+          background: #fdf9f4;
         }
 
         details summary {
@@ -1029,65 +1286,23 @@ export default function App() {
         }
 
         /* ── Probabilité ── */
-        .proba-block {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 4px;
-        }
-
-        .proba-label {
-          font-size: 11px;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
-          color: #a09890;
-          font-weight: 500;
-          white-space: nowrap;
-        }
-
-        .proba-bar-wrap {
-          flex: 1;
-          height: 6px;
-          background: #ede9e4;
-          border-radius: 3px;
-          overflow: hidden;
-        }
-
-        .proba-bar {
-          height: 100%;
-          border-radius: 3px;
-          transition: width 0.6s ease;
-        }
-
+        .proba-block { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+        .proba-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #a09890; font-weight: 500; white-space: nowrap; }
+        .proba-bar-wrap { flex: 1; height: 6px; background: #ede9e4; border-radius: 3px; overflow: hidden; }
+        .proba-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
         .proba-pos { background: #2ecc71; }
         .proba-neg { background: #e74c3c; }
+        .proba-value { font-size: 13px; font-weight: 500; color: #1a1a1a; min-width: 36px; text-align: right; }
 
-        .proba-value {
-          font-size: 13px;
-          font-weight: 500;
-          color: #1a1a1a;
-          min-width: 36px;
-          text-align: right;
-        }
-
-        /* ── Explications log-odds ── */
-        .fair-explain-header {
-          margin-bottom: 20px;
-        }
-
+        /* ── Explications ── */
+        .fair-explain-header { margin-bottom: 20px; }
         .fair-explain-title {
           font-family: 'DM Serif Display', serif;
           font-size: 18px;
           color: #1a1a1a;
           margin-bottom: 6px;
         }
-
-        .fair-explain-sub {
-          font-size: 12px;
-          font-weight: 300;
-          color: #a09890;
-          line-height: 1.6;
-        }
+        .fair-explain-sub { font-size: 12px; font-weight: 300; color: #a09890; line-height: 1.6; }
 
         .expl-row {
           display: grid;
@@ -1095,11 +1310,23 @@ export default function App() {
           align-items: center;
           gap: 12px;
           margin-bottom: 10px;
+          border-radius: 6px;
+          padding: 4px 0;
+          transition: background 0.2s ease;
+        }
+        .expl-row:hover { background: rgba(139,111,71,0.04); }
+
+        .expl-decisive {
+          animation: decisiveGlow 1.4s ease 0.5s;
+        }
+        @keyframes decisiveGlow {
+          0%   { background: rgba(139,111,71,0); }
+          30%  { background: rgba(139,111,71,0.10); }
+          100% { background: rgba(139,111,71,0); }
         }
 
         .expl-name {
           font-size: 12px;
-          font-family: 'DM Mono', 'Fira Code', monospace;
           color: #6b6560;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1113,20 +1340,22 @@ export default function App() {
           overflow: hidden;
         }
 
+        /* Bar fill animation via CSS variable */
         .expl-bar {
           height: 100%;
           border-radius: 4px;
-          transition: width 0.5s ease;
+          width: 0;
+          animation: barFill 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes barFill {
+          from { width: 0; }
+          to   { width: var(--bar-width, 0); }
         }
 
-        .bar-pos { background: #2ecc71; }
-        .bar-neg { background: #e74c3c; }
+        .bar-pos { background: linear-gradient(90deg, #a8edcc, #2ecc71); }
+        .bar-neg { background: linear-gradient(90deg, #f5b5b5, #e74c3c); }
 
-        .expl-val {
-          font-size: 11px;
-          font-weight: 500;
-          text-align: right;
-        }
+        .expl-val { font-size: 11px; font-weight: 500; text-align: right; }
 
         .val-pos { color: #2d7a4f; }
         .val-neg { color: #c0392b; }
@@ -1152,38 +1381,14 @@ export default function App() {
           line-height: 1.7;
           margin-bottom: 4px;
         }
-        .summary-pos {
-          background: #edf7f0;
-          border: 1px solid #c3e6d0;
-          color: #1e5c38;
-        }
-        .summary-neg {
-          background: #fdf0f0;
-          border: 1px solid #f0c8c8;
-          color: #8b2020;
-        }
+        .summary-pos { background: #edf7f0; border: 1px solid #c3e6d0; color: #1e5c38; }
+        .summary-neg { background: #fdf0f0; border: 1px solid #f0c8c8; color: #8b2020; }
 
         /* ── Jauge seuil ── */
-        .tg-wrap {
-          margin-bottom: 4px;
-        }
-        .tg-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
-        }
-        .tg-label {
-          font-size: 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #a09890;
-          font-weight: 500;
-        }
-        .tg-diff {
-          font-size: 12px;
-          font-weight: 600;
-        }
+        .tg-wrap { margin-bottom: 4px; }
+        .tg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .tg-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #a09890; font-weight: 500; }
+        .tg-diff { font-size: 12px; font-weight: 600; }
         .tg-bar-outer {
           position: relative;
           height: 12px;
@@ -1192,11 +1397,19 @@ export default function App() {
           overflow: visible;
           margin-bottom: 8px;
         }
+
+        /* Animated fill via CSS variable */
         .tg-fill {
           height: 100%;
           border-radius: 6px;
-          transition: width 0.6s ease;
+          width: 0;
+          animation: tgFill 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
         }
+        @keyframes tgFill {
+          from { width: 0; }
+          to   { width: var(--tg-width, 0); }
+        }
+
         .tg-fill-pos { background: linear-gradient(90deg, #a8edcc, #2ecc71); }
         .tg-fill-neg { background: linear-gradient(90deg, #f5b5b5, #e74c3c); }
         .tg-threshold-line {
@@ -1207,31 +1420,12 @@ export default function App() {
           flex-direction: column;
           align-items: center;
         }
-        .tg-threshold-tick {
-          width: 2px;
-          height: 20px;
-          background: #1a1a1a;
-          border-radius: 1px;
-        }
-        .tg-threshold-label {
-          font-size: 9px;
-          text-align: center;
-          color: #6b6560;
-          font-weight: 500;
-          margin-top: 3px;
-          white-space: nowrap;
-          letter-spacing: 0.5px;
-        }
-        .tg-sub {
-          font-size: 12px;
-          color: #a09890;
-          font-weight: 300;
-        }
+        .tg-threshold-tick { width: 2px; height: 20px; background: #1a1a1a; border-radius: 1px; }
+        .tg-threshold-label { font-size: 9px; text-align: center; color: #6b6560; font-weight: 500; margin-top: 3px; white-space: nowrap; letter-spacing: 0.5px; }
+        .tg-sub { font-size: 12px; color: #a09890; font-weight: 300; }
 
         /* ── Catégories de features ── */
-        .cat-group {
-          margin-bottom: 20px;
-        }
+        .cat-group { margin-bottom: 20px; }
         .cat-label {
           font-size: 9px;
           letter-spacing: 2.5px;
@@ -1243,12 +1437,19 @@ export default function App() {
           border-bottom: 1px solid #ede9e4;
         }
 
-        /* ── Historique ── */
+        /* ── Dashboard ── */
         .history-page {
           padding: 48px 64px;
-          background: #f5f3ef;
           min-height: 100%;
+          position: relative;
+          z-index: 1;
+          background:
+            linear-gradient(rgba(26,26,26,0.022) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(26,26,26,0.022) 1px, transparent 1px),
+            #f5f3ef;
+          background-size: 44px 44px;
         }
+
         .history-header {
           display: flex;
           justify-content: space-between;
@@ -1261,12 +1462,8 @@ export default function App() {
           color: #1a1a1a;
           letter-spacing: -0.5px;
         }
-        .history-sub {
-          font-size: 13px;
-          color: #a09890;
-          font-weight: 300;
-          margin-top: 4px;
-        }
+        .history-sub { font-size: 13px; color: #a09890; font-weight: 300; margin-top: 4px; }
+
         .refresh-btn {
           padding: 10px 22px;
           background: #fff;
@@ -1281,23 +1478,164 @@ export default function App() {
         }
         .refresh-btn:hover { background: #fdf9f4; border-color: #8b6f47; color: #8b6f47; }
         .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .history-empty {
-          text-align: center;
-          color: #a09890;
-          font-size: 14px;
+
+        /* ── Insight RH ── */
+        .insight-rh {
+          background: linear-gradient(135deg, rgba(139,111,71,0.07), rgba(139,111,71,0.03));
+          border: 1px solid rgba(139,111,71,0.2);
+          border-radius: 14px;
+          padding: 16px 22px;
+          margin-bottom: 28px;
+          font-size: 13px;
           font-weight: 300;
-          padding: 80px 0;
+          color: #5a4a38;
+          line-height: 1.7;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          animation: revealUp 0.6s ease 0.3s both;
         }
+        .insight-icon {
+          font-size: 18px;
+          flex-shrink: 0;
+          opacity: 0.8;
+        }
+
+        /* ── KPI cards ── */
+        .kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 28px;
+        }
+        .kpi-card {
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 14px;
+          padding: 20px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+          cursor: default;
+        }
+        .kpi-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 40px rgba(26,26,26,0.09);
+          border-color: rgba(139,111,71,0.3);
+        }
+        .kpi-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: -120%;
+          width: 70%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+          transform: skewX(-18deg);
+          pointer-events: none;
+        }
+        .kpi-card:hover::before {
+          animation: kpiSweep 0.7s ease;
+        }
+        @keyframes kpiSweep {
+          to { left: 130%; }
+        }
+
+        .kpi-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #a09890; font-weight: 500; }
+        .kpi-value {
+          font-family: 'DM Serif Display', serif;
+          font-size: 32px;
+          color: #1a1a1a;
+          line-height: 1.1;
+          font-variant-numeric: tabular-nums;
+        }
+        .kpi-sub { font-size: 12px; color: #a09890; font-weight: 300; }
+
+        /* Donut */
+        .kpi-donut {
+          position: absolute;
+          top: 18px;
+          right: 18px;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          background: conic-gradient(
+            #2d7a4f 0 var(--donut-sel, 0%),
+            #e74c3c var(--donut-sel, 0%) 100%
+          );
+          opacity: 0.85;
+        }
+        .kpi-donut::after {
+          content: '';
+          position: absolute;
+          inset: 7px;
+          background: #fff;
+          border-radius: 50%;
+        }
+
+        /* ── Barre de filtres ── */
+        .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-input {
+          padding: 9px 16px;
+          border: 1px solid #e2ddd8;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #1a1a1a;
+          background: #fff;
+          outline: none;
+          width: 220px;
+          transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: #c0b8b0; }
+        .search-input:focus { border-color: #8b6f47; box-shadow: 0 0 0 3px rgba(139,111,71,0.08); }
+        .filter-group { display: flex; background: #fff; border: 1px solid #e2ddd8; border-radius: 100px; overflow: hidden; }
+        .filter-btn {
+          padding: 8px 16px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          color: #a09890;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+        .filter-btn:hover { color: #6b6560; background: #faf9f7; }
+        .filter-btn.active { background: #1a1a1a; color: #fff; border-radius: 100px; }
+        .filter-results { margin-left: auto; font-size: 12px; color: #a09890; font-weight: 300; white-space: nowrap; }
+
+        .toggle-mode-btn {
+          font-size: 10px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: #8b6f47;
+          background: none;
+          border: 1px solid #d4c4b0;
+          border-radius: 100px;
+          padding: 4px 12px;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          font-weight: 500;
+          transition: all 0.2s ease;
+          white-space: nowrap;
+        }
+        .toggle-mode-btn:hover { background: #fdf9f4; border-color: #8b6f47; }
+        .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
+
+        /* ── Table ── */
+        .history-empty { text-align: center; color: #a09890; font-size: 14px; font-weight: 300; padding: 80px 0; }
         .history-table-wrap {
           background: #fff;
           border: 1px solid #e2ddd8;
           border-radius: 16px;
           overflow: hidden;
+          box-shadow: 0 2px 12px rgba(26,26,26,0.04);
         }
-        .history-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
+        .history-table { width: 100%; border-collapse: collapse; }
         .history-table th {
           font-size: 10px;
           letter-spacing: 2px;
@@ -1309,24 +1647,77 @@ export default function App() {
           border-bottom: 1px solid #e2ddd8;
           background: #faf9f7;
         }
+
+        /* Table row with left accent */
         .history-row {
           cursor: pointer;
           transition: background 0.15s ease;
+          position: relative;
         }
-        .history-row:hover { background: #faf9f7; }
+        .history-row:hover { background: rgba(139,111,71,0.04); }
         .history-row.expanded { background: #fdf9f4; }
         .history-row td {
           padding: 16px 20px;
           border-bottom: 1px solid #f0ede8;
           font-size: 13px;
           color: #1a1a1a;
+          position: relative;
         }
+        /* Left accent bar via first-child ::before */
+        .history-row:hover td:first-child::before,
+        .history-row.selected-row td:first-child::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 15%; bottom: 15%;
+          width: 3px;
+          background: #8b6f47;
+          border-radius: 0 2px 2px 0;
+          opacity: 1;
+        }
+        .history-row td:first-child::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 15%; bottom: 15%;
+          width: 3px;
+          background: #8b6f47;
+          border-radius: 0 2px 2px 0;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+
         .td-date { color: #6b6560; font-size: 12px; }
         .td-time { color: #a09890; font-size: 11px; }
         .td-file { font-weight: 500; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .td-score { font-weight: 600; font-size: 14px; }
+        .td-score { font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
         .td-threshold { color: #a09890; font-size: 12px; }
         .td-expand { color: #a09890; font-size: 11px; text-align: right; }
+
+        /* Score sparkline */
+        .score-cell { display: flex; align-items: center; gap: 8px; }
+        .score-spark-wrap {
+          position: relative;
+          width: 52px;
+          height: 5px;
+          background: #ede9e4;
+          border-radius: 3px;
+          overflow: visible;
+          flex-shrink: 0;
+        }
+        .score-spark-fill {
+          height: 100%;
+          border-radius: 3px;
+          transition: width 0.5s ease;
+        }
+        .score-spark-threshold {
+          position: absolute;
+          top: -3px;
+          width: 1.5px;
+          height: 11px;
+          background: #1a1a1a;
+          border-radius: 1px;
+          transform: translateX(-50%);
+        }
+
         .model-badge {
           font-size: 9px;
           font-weight: 700;
@@ -1337,6 +1728,7 @@ export default function App() {
         }
         .badge-fair { background: #edf7f0; color: #2d7a4f; border: 1px solid #c3e6d0; }
         .badge-std  { background: #f0f0f7; color: #5a5a8b; border: 1px solid #d0d0e8; }
+
         .decision-pill-sm {
           display: inline-flex;
           align-items: center;
@@ -1346,6 +1738,55 @@ export default function App() {
           font-size: 11px;
           font-weight: 500;
         }
+
+        /* ── Checkbox ── */
+        .row-checkbox {
+          appearance: none;
+          width: 17px; height: 17px;
+          border: 1.5px solid #d4c4b0;
+          border-radius: 5px;
+          background: white;
+          cursor: pointer;
+          display: grid;
+          place-items: center;
+          transition: all 0.18s ease;
+          flex-shrink: 0;
+        }
+        .row-checkbox:checked {
+          background: #8b6f47;
+          border-color: #8b6f47;
+        }
+        .row-checkbox:checked::after {
+          content: "✓";
+          color: white;
+          font-size: 11px;
+          line-height: 1;
+        }
+        .row-checkbox:hover { border-color: #8b6f47; }
+
+        .history-row.selected-row { background: rgba(139,111,71,0.04); }
+
+        /* ── Bouton comparer ── */
+        .compare-btn {
+          padding: 10px 22px;
+          background: #8b6f47;
+          border: none;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          color: #fff;
+          cursor: pointer;
+          transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+          margin-left: 12px;
+        }
+        .compare-btn:hover {
+          background: #7a5e38;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(139,111,71,0.3);
+        }
+
+        /* ── Detail row ── */
         .history-detail-row td {
           background: #fdf9f4;
           padding: 0 20px 16px 20px;
@@ -1370,140 +1811,23 @@ export default function App() {
         }
         .hf-name { color: #6b6560; }
         .hf-val { font-weight: 600; font-size: 12px; }
-        /* ── KPI cards ── */
-        .kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 16px;
-          margin-bottom: 28px;
-        }
-        .kpi-card {
-          background: #fff;
-          border: 1px solid #e2ddd8;
-          border-radius: 14px;
-          padding: 20px 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .kpi-label {
-          font-size: 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #a09890;
-          font-weight: 500;
-        }
-        .kpi-value {
-          font-family: 'DM Serif Display', serif;
-          font-size: 32px;
-          color: #1a1a1a;
-          line-height: 1.1;
-        }
-        .kpi-sub { font-size: 12px; color: #a09890; font-weight: 300; }
-
-        /* ── Barre de filtres ── */
-        .filter-bar {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-        .search-input {
-          padding: 9px 16px;
-          border: 1px solid #e2ddd8;
-          border-radius: 100px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          color: #1a1a1a;
-          background: #fff;
-          outline: none;
-          width: 220px;
-          transition: border-color 0.2s;
-        }
-        .search-input::placeholder { color: #c0b8b0; }
-        .search-input:focus { border-color: #8b6f47; }
-        .filter-group {
-          display: flex;
-          background: #fff;
-          border: 1px solid #e2ddd8;
-          border-radius: 100px;
-          overflow: hidden;
-        }
-        .filter-btn {
-          padding: 8px 16px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 12px;
-          font-weight: 500;
-          color: #a09890;
-          background: none;
-          border: none;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          white-space: nowrap;
-        }
-        .filter-btn:hover { color: #6b6560; background: #faf9f7; }
-        .filter-btn.active { background: #1a1a1a; color: #fff; border-radius: 100px; }
-        .filter-results {
-          margin-left: auto;
-          font-size: 12px;
-          color: #a09890;
-          font-weight: 300;
-          white-space: nowrap;
-        }
-
-        .toggle-mode-btn {
-          font-size: 10px;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          color: #8b6f47;
-          background: none;
-          border: 1px solid #d4c4b0;
-          border-radius: 100px;
-          padding: 4px 12px;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 500;
-          transition: all 0.2s ease;
-          white-space: nowrap;
-        }
-        .toggle-mode-btn:hover { background: #fdf9f4; border-color: #8b6f47; }
-        .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
-
-        /* ── Checkbox sélection ── */
-        .row-checkbox {
-          width: 16px; height: 16px; cursor: pointer; accent-color: #8b6f47;
-        }
-        .history-row.selected-row { background: #fdf9f4; }
-        .history-row.selected-row > td:first-child { border-left: 3px solid #8b6f47; }
-
-        /* ── Bouton comparer ── */
-        .compare-btn {
-          padding: 10px 22px;
-          background: #8b6f47;
-          border: none;
-          border-radius: 100px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          color: #fff;
-          cursor: pointer;
-          transition: background 0.2s ease;
-          margin-left: 12px;
-        }
-        .compare-btn:hover { background: #7a5e38; }
 
         /* ── Modal ── */
         .modal-overlay {
           position: fixed;
           inset: 0;
           background: rgba(26,26,26,0.55);
-          backdrop-filter: blur(4px);
+          backdrop-filter: blur(6px);
           z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 32px;
+          animation: overlayIn 0.25s ease;
+        }
+        @keyframes overlayIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         .modal-panel {
           background: #faf9f7;
@@ -1514,20 +1838,15 @@ export default function App() {
           max-height: 90vh;
           overflow-y: auto;
           padding: 40px;
-          box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+          box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+          animation: modalIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 32px;
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.94) translateY(16px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .modal-title {
-          font-family: 'DM Serif Display', serif;
-          font-size: 24px;
-          color: #1a1a1a;
-          letter-spacing: -0.5px;
-        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+        .modal-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: #1a1a1a; letter-spacing: -0.5px; }
         .modal-sub { font-size: 13px; color: #a09890; font-weight: 300; margin-top: 4px; }
         .modal-close {
           width: 36px; height: 36px;
@@ -1544,65 +1863,26 @@ export default function App() {
           flex-shrink: 0;
         }
         .modal-close:hover { background: #fdf0f0; color: #c0392b; border-color: #f0c8c8; }
-        .modal-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 24px;
-        }
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .compare-card {
           background: #fff;
           border-radius: 16px;
           padding: 28px;
           border: 1.5px solid #e2ddd8;
+          transition: box-shadow 0.2s ease;
         }
+        .compare-card:hover { box-shadow: 0 8px 32px rgba(26,26,26,0.07); }
         .compare-card.compare-selected { border-color: #c3e6d0; }
         .compare-card.compare-rejected { border-color: #f0c8c8; }
-        .compare-filename {
-          font-size: 11px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #a09890;
-          margin-bottom: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          text-align: center;
-        }
+        .compare-filename { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #a09890; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
         .compare-date { font-size: 12px; color: #a09890; margin-bottom: 14px; text-align: center; }
         .compare-badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; }
         .compare-score-block { margin-bottom: 20px; text-align: center; }
-        .compare-score-label {
-          font-size: 10px;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          color: #a09890;
-          font-weight: 500;
-          margin-bottom: 6px;
-        }
-        .compare-score-val {
-          font-family: 'DM Serif Display', serif;
-          font-size: 40px;
-          color: #1a1a1a;
-          margin-bottom: 10px;
-        }
-        .compare-bar-wrap {
-          position: relative;
-          height: 10px;
-          background: #ede9e4;
-          border-radius: 5px;
-          overflow: visible;
-          margin-bottom: 6px;
-        }
+        .compare-score-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #a09890; font-weight: 500; margin-bottom: 6px; }
+        .compare-score-val { font-family: 'DM Serif Display', serif; font-size: 40px; color: #1a1a1a; margin-bottom: 10px; }
+        .compare-bar-wrap { position: relative; height: 10px; background: #ede9e4; border-radius: 5px; overflow: visible; margin-bottom: 6px; }
         .compare-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
-        .compare-threshold-mark {
-          position: absolute;
-          top: -4px;
-          width: 2px;
-          height: 18px;
-          background: #1a1a1a;
-          border-radius: 1px;
-          transform: translateX(-50%);
-        }
+        .compare-threshold-mark { position: absolute; top: -4px; width: 2px; height: 18px; background: #1a1a1a; border-radius: 1px; transform: translateX(-50%); }
         .compare-threshold-label { font-size: 11px; color: #a09890; }
         .compare-features { padding-top: 12px; border-top: 1px solid #e2ddd8; margin-top: 4px; }
         .compare-diff-banner {
@@ -1619,7 +1899,7 @@ export default function App() {
         }
         .compare-diff-val { font-weight: 700; font-size: 15px; }
 
-        /* ── Splash screen (cinematic) ── */
+        /* ── Splash screen ── */
         .splash-overlay {
           position: fixed;
           inset: 0;
@@ -1717,7 +1997,7 @@ export default function App() {
           100% { opacity: 0; transform: scale(1.04); pointer-events: none; }
         }
 
-        /* ── Logo aurora (header) ── */
+        /* ── Logo aurora ── */
         .logo-aurora {
           display: inline-block;
           background: linear-gradient(135deg, #8b6f47 0%, #c4956a 30%, #e8c99a 50%, #c4956a 70%, #8b6f47 100%);
@@ -1734,10 +2014,7 @@ export default function App() {
         }
 
         /* ── Badge shimmer ── */
-        .badge-shimmer {
-          position: relative;
-          overflow: hidden;
-        }
+        .badge-shimmer { position: relative; overflow: hidden; }
         .badge-shimmer::after {
           content: '';
           position: absolute;
@@ -1757,7 +2034,7 @@ export default function App() {
           animation: blurFadeIn 0.5s ease-out forwards;
         }
         @keyframes blurFadeIn {
-          from { opacity: 0; filter: blur(6px); transform: translateY(10px); }
+          from { opacity: 0; filter: blur(6px); transform: translateY(8px); }
           to   { opacity: 1; filter: blur(0); transform: translateY(0); }
         }
       `}</style>
@@ -1771,7 +2048,12 @@ export default function App() {
 
         {/* Onglets */}
         <nav className="tabs">
+          <div
+            className="tab-indicator-line"
+            style={{ left: tabIndicator.left, width: tabIndicator.width }}
+          />
           <button
+            ref={tabRef0}
             className={`tab-btn ${activeTab === 0 ? "active" : ""}`}
             onClick={() => setActiveTab(0)}
           >
@@ -1779,6 +2061,7 @@ export default function App() {
             Analyse Standard
           </button>
           <button
+            ref={tabRef1}
             className={`tab-btn ${activeTab === 1 ? "active" : ""}`}
             onClick={() => setActiveTab(1)}
           >
@@ -1787,6 +2070,7 @@ export default function App() {
             <span className="tab-fair-tag">FAIR</span>
           </button>
           <button
+            ref={tabRef2}
             className={`tab-btn ${activeTab === 2 ? "active" : ""}`}
             onClick={() => setActiveTab(2)}
           >
@@ -1797,7 +2081,7 @@ export default function App() {
 
         {/* Contenu */}
         {activeTab === 0 && (
-          <div className="main">
+          <div className="main tab-bg-0">
             <div className="left">
               <Dropzone
                 onFile={sendFile}
@@ -1810,7 +2094,7 @@ export default function App() {
               />
               {error && <div className="error-msg">{error}</div>}
             </div>
-            <div className="right">
+            <div className="right" key={filename}>
               {!result ? (
                 <div className="empty-state">
                   <div className="empty-icon">🎯</div>
@@ -1818,6 +2102,33 @@ export default function App() {
                 </div>
               ) : (
                 <ResultPanel result={result} filename={filename} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 1 && (
+          <div className="main tab-bg-1">
+            <div className="left">
+              <Dropzone
+                onFile={sendFileFair}
+                loading={loadingFair}
+                filename={filenameFair}
+                eyebrow="Modèle équitable & transparent"
+                headline="Décision juste,"
+                headlineEm="explications claires"
+                desc="Même analyse, modèle sans critères discriminatoires (âge, distance, origines). Chaque décision est expliquée critère par critère."
+              />
+              {errorFair && <div className="error-msg">{errorFair}</div>}
+            </div>
+            <div className="right" key={filenameFair}>
+              {!resultFair ? (
+                <div className="empty-state">
+                  <div className="empty-icon">⚖️</div>
+                  <div className="empty-text">En attente d'un CV</div>
+                </div>
+              ) : (
+                <FairResultPanel result={resultFair} filename={filenameFair} />
               )}
             </div>
           </div>
@@ -1850,28 +2161,39 @@ export default function App() {
 
             {/* KPI Cards */}
             {history.length > 0 && (
-              <div className="kpi-grid">
-                <div className="kpi-card">
-                  <div className="kpi-label">CVs analysés</div>
-                  <div className="kpi-value">{history.length}</div>
-                  <div className="kpi-sub">au total</div>
+              <>
+                <div className="kpi-grid">
+                  <div className="kpi-card">
+                    <div className="kpi-label">CVs analysés</div>
+                    <div className="kpi-value">{kpiTotal}</div>
+                    <div className="kpi-sub">au total</div>
+                  </div>
+                  <div className="kpi-card">
+                    <div className="kpi-label">Sélectionnés</div>
+                    <div className="kpi-value val-pos">{kpiSelected}</div>
+                    <div className="kpi-sub">{selectRate}% du total</div>
+                    <div className="kpi-donut" style={{ "--donut-sel": `${selectRate}%` }} />
+                  </div>
+                  <div className="kpi-card">
+                    <div className="kpi-label">Refusés</div>
+                    <div className="kpi-value val-neg">{kpiRejected}</div>
+                    <div className="kpi-sub">{100 - selectRate}% du total</div>
+                  </div>
+                  <div className="kpi-card">
+                    <div className="kpi-label">Modèle FAIR</div>
+                    <div className="kpi-value">{kpiFair}</div>
+                    <div className="kpi-sub">analyse{totalFair !== 1 ? "s" : ""} équitable{totalFair !== 1 ? "s" : ""}</div>
+                  </div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Sélectionnés</div>
-                  <div className="kpi-value val-pos">{totalSelected}</div>
-                  <div className="kpi-sub">{selectRate}% du total</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Refusés</div>
-                  <div className="kpi-value val-neg">{history.length - totalSelected}</div>
-                  <div className="kpi-sub">{100 - selectRate}% du total</div>
-                </div>
-                <div className="kpi-card">
-                  <div className="kpi-label">Modèle FAIR</div>
-                  <div className="kpi-value">{totalFair}</div>
-                  <div className="kpi-sub">analyse{totalFair !== 1 ? "s" : ""} équitable{totalFair !== 1 ? "s" : ""}</div>
-                </div>
-              </div>
+
+                {/* Insight RH */}
+                {insightText && (
+                  <div className="insight-rh">
+                    <span className="insight-icon">💡</span>
+                    {insightText}
+                  </div>
+                )}
+              </>
             )}
 
             {historyLoading && history.length === 0 ? (
@@ -1957,8 +2279,22 @@ export default function App() {
                                   {isRowSel ? "Sélectionné" : "Refusé"}
                                 </span>
                               </td>
-                              <td className={`td-score ${isRowSel ? "val-pos" : "val-neg"}`}>
-                                {(row.score * 100).toFixed(1)}%
+                              <td>
+                                <div className="score-cell">
+                                  <span className={`td-score ${isRowSel ? "val-pos" : "val-neg"}`}>
+                                    {(row.score * 100).toFixed(1)}%
+                                  </span>
+                                  <div className="score-spark-wrap">
+                                    <div
+                                      className={`score-spark-fill ${isRowSel ? "bar-pos" : "bar-neg"}`}
+                                      style={{ width: `${Math.min(row.score * 100, 100)}%` }}
+                                    />
+                                    <div
+                                      className="score-spark-threshold"
+                                      style={{ left: `${Math.min(row.threshold * 100, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
                               </td>
                               <td className="td-threshold">{(row.threshold * 100).toFixed(1)}%</td>
                               <td className="td-expand">{isExpanded ? "▲" : "▼"}</td>
@@ -1982,33 +2318,6 @@ export default function App() {
             {showCompare && selectedRows.length === 2 && (
               <CompareModal rows={selectedRows} onClose={() => setShowCompare(false)} />
             )}
-          </div>
-        )}
-
-        {activeTab === 1 && (
-          <div className="main">
-            <div className="left">
-              <Dropzone
-                onFile={sendFileFair}
-                loading={loadingFair}
-                filename={filenameFair}
-                eyebrow="Modèle équitable & transparent"
-                headline="Décision juste,"
-                headlineEm="explications claires"
-                desc="Même analyse, modèle sans critères discriminatoires (âge, distance, origines). Chaque décision est expliquée critère par critère."
-              />
-              {errorFair && <div className="error-msg">{errorFair}</div>}
-            </div>
-            <div className="right">
-              {!resultFair ? (
-                <div className="empty-state">
-                  <div className="empty-icon">⚖️</div>
-                  <div className="empty-text">En attente d'un CV</div>
-                </div>
-              ) : (
-                <FairResultPanel result={resultFair} filename={filenameFair} />
-              )}
-            </div>
           </div>
         )}
       </div>
