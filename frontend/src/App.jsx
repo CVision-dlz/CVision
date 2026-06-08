@@ -619,7 +619,7 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
                 <div className="dz-card-back" />
                 <div className="dz-card-front">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                    stroke="#1d4ed8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
@@ -823,7 +823,7 @@ export default function App() {
         }
 
         body {
-          background: #f8f9fa;
+          background: #f4f1ec;
           color: #0f172a;
           font-family: 'DM Sans', sans-serif;
           min-height: 100vh;
@@ -834,6 +834,7 @@ export default function App() {
           display: grid;
           grid-template-rows: auto auto 1fr;
           position: relative;
+          background: #f4f1ec;
         }
 
         /* Mouse halo */
@@ -845,20 +846,21 @@ export default function App() {
           z-index: 0;
           background: radial-gradient(
             700px circle at var(--mouse-x) var(--mouse-y),
-            rgba(29,78,216,0.03),
+            rgba(249,115,22,0.03),
             transparent 42%
           );
         }
 
         .header {
-          padding: 28px 56px;
+          padding: 22px 56px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e8e3db;
           background: #ffffff;
           position: relative;
           z-index: 10;
+          box-shadow: 0 1px 0 #e8e3db;
         }
 
         .logo {
@@ -868,15 +870,15 @@ export default function App() {
           letter-spacing: -0.5px;
         }
 
-        .logo span { color: #1d4ed8; }
+        .logo span { color: #f97316; }
 
         .badge {
           font-size: 11px;
           font-weight: 500;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #1d4ed8;
-          border: 1px solid #e2e8f0;
+          color: #f97316;
+          border: 1px solid #e8e3db;
           padding: 6px 16px;
           border-radius: 100px;
           background: #ffffff;
@@ -886,7 +888,7 @@ export default function App() {
         .tabs {
           display: flex;
           background: #ffffff;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e8e3db;
           padding: 0 56px;
           gap: 0;
           position: relative;
@@ -897,10 +899,10 @@ export default function App() {
           position: absolute;
           bottom: 0;
           height: 2px;
-          background: linear-gradient(90deg, transparent 0%, #1d4ed8 30%, #93c5fd 50%, #1d4ed8 70%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, #f97316 30%, #fed7aa 50%, #f97316 70%, transparent 100%);
           transition: left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
           border-radius: 2px;
-          box-shadow: 0 0 8px rgba(29,78,216,0.4);
+          box-shadow: 0 0 8px rgba(249,115,22,0.4);
         }
 
         .tab-btn {
@@ -936,9 +938,9 @@ export default function App() {
         }
 
         .tab-btn.active .tab-pip {
-          background: #1d4ed8;
+          background: #f97316;
           opacity: 1;
-          box-shadow: 0 0 6px rgba(29,78,216,0.5);
+          box-shadow: 0 0 6px rgba(249,115,22,0.5);
         }
 
         .tab-fair-tag {
@@ -967,7 +969,7 @@ export default function App() {
           flex-direction: column;
           justify-content: center;
           background: #ffffff;
-          border-right: 1px solid #e2e8f0;
+          border-right: 1px solid #e8e3db;
         }
 
         .tab-bg-0 .left {
@@ -981,7 +983,7 @@ export default function App() {
           font-size: 11px;
           letter-spacing: 3px;
           text-transform: uppercase;
-          color: #1d4ed8;
+          color: #f97316;
           font-weight: 500;
           margin-bottom: 20px;
           display: inline-flex;
@@ -993,7 +995,7 @@ export default function App() {
           display: inline-block;
           width: 28px;
           height: 1px;
-          background: #1d4ed8;
+          background: #f97316;
           margin-left: 10px;
           flex-shrink: 0;
           transform-origin: left;
@@ -1016,7 +1018,7 @@ export default function App() {
 
         .headline em {
           font-style: italic;
-          color: #1d4ed8;
+          color: #f97316;
         }
 
         .desc {
@@ -1030,8 +1032,8 @@ export default function App() {
         /* ── Dropzone Aceternity-style ── */
         .dz-ace {
           position: relative;
-          border-radius: 16px;
-          border: 1.5px solid #e2e8f0;
+          border-radius: 20px;
+          border: 1.5px solid #e8e3db;
           background: #fff;
           padding: 52px 32px;
           cursor: pointer;
@@ -1039,14 +1041,14 @@ export default function App() {
           transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .dz-ace:hover {
-          border-color: #1d4ed8;
-          box-shadow: 0 0 0 4px rgba(29,78,216,0.06), 0 8px 32px rgba(29,78,216,0.07);
+          border-color: #f97316;
+          box-shadow: 0 0 0 4px rgba(249,115,22,0.06), 0 8px 32px rgba(249,115,22,0.07);
         }
         .dz-ace-drag {
-          border-color: #1d4ed8 !important;
+          border-color: #f97316 !important;
           border-style: dashed;
           background: #ffffff;
-          box-shadow: 0 0 0 5px rgba(29,78,216,0.09) !important;
+          box-shadow: 0 0 0 5px rgba(249,115,22,0.09) !important;
         }
 
         /* Scan line on drag */
@@ -1057,8 +1059,8 @@ export default function App() {
           right: 10%;
           height: 2px;
           top: 0;
-          background: linear-gradient(90deg, transparent, rgba(29,78,216,0.9), transparent);
-          box-shadow: 0 0 14px rgba(29,78,216,0.4);
+          background: linear-gradient(90deg, transparent, rgba(249,115,22,0.9), transparent);
+          box-shadow: 0 0 14px rgba(249,115,22,0.4);
           animation: scanLine 1.1s ease-in-out infinite;
           border-radius: 1px;
           pointer-events: none;
@@ -1100,8 +1102,8 @@ export default function App() {
           position: absolute;
           inset: 0;
           background: #ffffff;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 12px;
+          border: 1.5px solid #e8e3db;
+          border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1110,14 +1112,14 @@ export default function App() {
           transition: box-shadow 0.3s ease;
         }
         .dz-ace:hover .dz-card-front {
-          box-shadow: 0 10px 32px rgba(29,78,216,0.12);
+          box-shadow: 0 10px 32px rgba(249,115,22,0.12);
         }
         .dz-card-back {
           position: absolute;
           top: 8px; left: -8px; right: -8px; bottom: -8px;
-          background: #f8f9fa;
-          border: 1.5px solid #e2e8f0;
-          border-radius: 12px;
+          background: #f4f1ec;
+          border: 1.5px solid #e8e3db;
+          border-radius: 16px;
           z-index: 1;
         }
         @keyframes dzFloat {
@@ -1143,8 +1145,8 @@ export default function App() {
         }
         .dz-spin {
           width: 36px; height: 36px;
-          border: 2px solid #e2e8f0;
-          border-top-color: #1d4ed8;
+          border: 2px solid #e8e3db;
+          border-top-color: #f97316;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }
@@ -1186,7 +1188,7 @@ export default function App() {
           color: inherit;
         }
         .dz-step-done .dz-step-icon { color: #2d7a4f; }
-        .dz-step-active .dz-step-icon { color: #1d4ed8; }
+        .dz-step-active .dz-step-icon { color: #f97316; }
 
         .dz-file-display { animation: fileIn 0.45s cubic-bezier(0.16,1,0.3,1); }
         @keyframes fileIn {
@@ -1198,8 +1200,8 @@ export default function App() {
           align-items: center;
           gap: 12px;
           background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border: 1px solid #e8e3db;
+          border-radius: 16px;
           padding: 14px 20px;
         }
         .dz-file-name { font-size: 14px; font-weight: 500; color: #0f172a; text-align: left; }
@@ -1218,7 +1220,7 @@ export default function App() {
         .right {
           padding: 72px 64px;
           overflow-y: auto;
-          background: #f8f9fa;
+          background: #f4f1ec;
           position: relative;
         }
 
@@ -1315,7 +1317,7 @@ export default function App() {
 
         .divider {
           height: 1px;
-          background: #e2e8f0;
+          background: #e8e3db;
           margin: 28px 0;
         }
 
@@ -1328,8 +1330,8 @@ export default function App() {
 
         .info-card {
           background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border: 1px solid #e8e3db;
+          border-radius: 16px;
           padding: 16px 20px;
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -1375,12 +1377,12 @@ export default function App() {
           border-radius: 100px;
           background: #fff;
           color: #64748b;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           transition: all 0.2s ease;
         }
         .tag:hover {
-          border-color: #1d4ed8;
-          color: #1d4ed8;
+          border-color: #f97316;
+          color: #f97316;
           background: #ffffff;
         }
 
@@ -1400,14 +1402,14 @@ export default function App() {
           background: #fff;
           padding: 16px;
           border-radius: 10px;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           max-height: 200px;
         }
 
         /* ── Probabilité ── */
         .proba-block { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
         .proba-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #94a3b8; font-weight: 500; white-space: nowrap; }
-        .proba-bar-wrap { flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+        .proba-bar-wrap { flex: 1; height: 6px; background: #e8e3db; border-radius: 3px; overflow: hidden; }
         .proba-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
         .proba-pos { background: #2ecc71; }
         .proba-neg { background: #e74c3c; }
@@ -1433,15 +1435,15 @@ export default function App() {
           padding: 4px 0;
           transition: background 0.2s ease;
         }
-        .expl-row:hover { background: rgba(29,78,216,0.04); }
+        .expl-row:hover { background: rgba(249,115,22,0.04); }
 
         .expl-decisive {
           animation: decisiveGlow 1.4s ease 0.5s;
         }
         @keyframes decisiveGlow {
-          0%   { background: rgba(29,78,216,0); }
-          30%  { background: rgba(29,78,216,0.10); }
-          100% { background: rgba(29,78,216,0); }
+          0%   { background: rgba(249,115,22,0); }
+          30%  { background: rgba(249,115,22,0.10); }
+          100% { background: rgba(249,115,22,0); }
         }
 
         .expl-name {
@@ -1454,7 +1456,7 @@ export default function App() {
 
         .expl-bar-wrap {
           height: 8px;
-          background: #e2e8f0;
+          background: #e8e3db;
           border-radius: 4px;
           overflow: hidden;
         }
@@ -1494,7 +1496,7 @@ export default function App() {
         /* ── Résumé textuel ── */
         .summary-block {
           padding: 14px 18px;
-          border-radius: 12px;
+          border-radius: 16px;
           font-size: 14px;
           font-weight: 300;
           line-height: 1.7;
@@ -1511,7 +1513,7 @@ export default function App() {
         .tg-bar-outer {
           position: relative;
           height: 12px;
-          background: #e2e8f0;
+          background: #e8e3db;
           border-radius: 6px;
           overflow: visible;
           margin-bottom: 8px;
@@ -1549,11 +1551,11 @@ export default function App() {
           font-size: 9px;
           letter-spacing: 2.5px;
           text-transform: uppercase;
-          color: #1d4ed8;
+          color: #f97316;
           font-weight: 600;
           margin-bottom: 10px;
           padding-bottom: 6px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e8e3db;
         }
 
         /* ── Dashboard ── */
@@ -1565,7 +1567,7 @@ export default function App() {
           background:
             linear-gradient(rgba(0,0,0,0.028) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0,0,0,0.028) 1px, transparent 1px),
-            #f8f9fa;
+            #f4f1ec;
           background-size: 44px 44px;
         }
 
@@ -1586,7 +1588,7 @@ export default function App() {
         .refresh-btn {
           padding: 10px 22px;
           background: #fff;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
@@ -1595,14 +1597,14 @@ export default function App() {
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        .refresh-btn:hover { background: #ffffff; border-color: #1d4ed8; color: #1d4ed8; }
+        .refresh-btn:hover { background: #ffffff; border-color: #f97316; color: #f97316; }
         .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ── Insight RH ── */
         .insight-rh {
           background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-left: 3px solid #1d4ed8;
+          border: 1px solid #e8e3db;
+          border-left: 3px solid #f97316;
           border-radius: 10px;
           padding: 14px 20px;
           margin-bottom: 28px;
@@ -1630,8 +1632,8 @@ export default function App() {
         }
         .kpi-card {
           background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
+          border: 1px solid #e8e3db;
+          border-radius: 20px;
           padding: 20px 24px;
           display: flex;
           flex-direction: column;
@@ -1644,7 +1646,7 @@ export default function App() {
         .kpi-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 16px 40px rgba(0,0,0,0.08);
-          border-color: rgba(29,78,216,0.4);
+          border-color: rgba(249,115,22,0.4);
         }
         .kpi-card::before {
           content: '';
@@ -1699,7 +1701,7 @@ export default function App() {
         .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
         .search-input {
           padding: 9px 16px;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
           font-size: 13px;
@@ -1710,8 +1712,8 @@ export default function App() {
           transition: border-color 0.2s;
         }
         .search-input::placeholder { color: #94a3b8; }
-        .search-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
-        .filter-group { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 100px; overflow: hidden; }
+        .search-input:focus { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.08); }
+        .filter-group { display: flex; background: #fff; border: 1px solid #e8e3db; border-radius: 100px; overflow: hidden; }
         .filter-btn {
           padding: 8px 16px;
           font-family: 'DM Sans', sans-serif;
@@ -1732,9 +1734,9 @@ export default function App() {
           font-size: 10px;
           letter-spacing: 1px;
           text-transform: uppercase;
-          color: #1d4ed8;
+          color: #f97316;
           background: none;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           border-radius: 100px;
           padding: 4px 12px;
           cursor: pointer;
@@ -1743,15 +1745,15 @@ export default function App() {
           transition: all 0.2s ease;
           white-space: nowrap;
         }
-        .toggle-mode-btn:hover { background: #ffffff; border-color: #1d4ed8; }
+        .toggle-mode-btn:hover { background: #ffffff; border-color: #f97316; }
         .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
 
         /* ── Table ── */
         .history-empty { text-align: center; color: #94a3b8; font-size: 14px; font-weight: 300; padding: 80px 0; }
         .history-table-wrap {
           background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 16px;
+          border: 1px solid #e8e3db;
+          border-radius: 20px;
           overflow: hidden;
           box-shadow: 0 2px 12px rgba(26,26,26,0.04);
         }
@@ -1764,7 +1766,7 @@ export default function App() {
           font-weight: 500;
           padding: 16px 20px;
           text-align: left;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e8e3db;
           background: #ffffff;
         }
 
@@ -1774,11 +1776,11 @@ export default function App() {
           transition: background 0.15s ease;
           position: relative;
         }
-        .history-row:hover { background: rgba(29,78,216,0.04); }
+        .history-row:hover { background: rgba(249,115,22,0.04); }
         .history-row.expanded { background: #ffffff; }
         .history-row td {
           padding: 16px 20px;
-          border-bottom: 1px solid #f8f9fa;
+          border-bottom: 1px solid #f4f1ec;
           font-size: 13px;
           color: #0f172a;
           position: relative;
@@ -1790,7 +1792,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #1d4ed8;
+          background: #f97316;
           border-radius: 0 2px 2px 0;
           opacity: 1;
         }
@@ -1799,7 +1801,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #1d4ed8;
+          background: #f97316;
           border-radius: 0 2px 2px 0;
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -1818,7 +1820,7 @@ export default function App() {
           position: relative;
           width: 52px;
           height: 5px;
-          background: #e2e8f0;
+          background: #e8e3db;
           border-radius: 3px;
           overflow: visible;
           flex-shrink: 0;
@@ -1847,7 +1849,7 @@ export default function App() {
           border-radius: 100px;
         }
         .badge-fair { background: #edf7f0; color: #2d7a4f; border: 1px solid #c3e6d0; }
-        .badge-std  { background: #f8f9fa; color: #64748b; border: 1px solid #e2e8f0; }
+        .badge-std  { background: #f4f1ec; color: #64748b; border: 1px solid #e8e3db; }
 
         .decision-pill-sm {
           display: inline-flex;
@@ -1863,7 +1865,7 @@ export default function App() {
         .row-checkbox {
           appearance: none;
           width: 17px; height: 17px;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid #e8e3db;
           border-radius: 5px;
           background: white;
           cursor: pointer;
@@ -1873,8 +1875,8 @@ export default function App() {
           flex-shrink: 0;
         }
         .row-checkbox:checked {
-          background: #1d4ed8;
-          border-color: #1d4ed8;
+          background: #f97316;
+          border-color: #f97316;
         }
         .row-checkbox:checked::after {
           content: "✓";
@@ -1882,9 +1884,9 @@ export default function App() {
           font-size: 11px;
           line-height: 1;
         }
-        .row-checkbox:hover { border-color: #1d4ed8; }
+        .row-checkbox:hover { border-color: #f97316; }
 
-        .history-row.selected-row { background: rgba(29,78,216,0.05); }
+        .history-row.selected-row { background: rgba(249,115,22,0.05); }
         .history-row.fav-row { background: rgba(251,191,36,0.06); }
 
         /* ── Row action buttons ── */
@@ -1916,7 +1918,7 @@ export default function App() {
         /* ── Bouton comparer ── */
         .compare-btn {
           padding: 10px 22px;
-          background: #1d4ed8;
+          background: #f97316;
           border: none;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
@@ -1928,23 +1930,23 @@ export default function App() {
           margin-left: 12px;
         }
         .compare-btn:hover {
-          background: #1e40af;
+          background: #ea580c;
           transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(29,78,216,0.3);
+          box-shadow: 0 6px 18px rgba(249,115,22,0.3);
         }
 
         /* ── Detail row ── */
         .history-detail-row td {
           background: #ffffff;
           padding: 0 20px 16px 20px;
-          border-bottom: 1px solid #e2e8f0;
+          border-bottom: 1px solid #e8e3db;
         }
         .history-features { padding: 4px 0; }
         .history-features-title {
           font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #1d4ed8;
+          color: #f97316;
           font-weight: 600;
           margin-bottom: 10px;
         }
@@ -1954,7 +1956,7 @@ export default function App() {
           align-items: center;
           padding: 4px 0;
           font-size: 12px;
-          border-bottom: 1px solid #f8f9fa;
+          border-bottom: 1px solid #f4f1ec;
         }
         .hf-name { color: #64748b; }
         .hf-val { font-weight: 600; font-size: 12px; }
@@ -1980,7 +1982,7 @@ export default function App() {
         .modal-panel {
           background: #ffffff;
           border-radius: 20px;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           width: 100%;
           max-width: 920px;
           max-height: 90vh;
@@ -1999,7 +2001,7 @@ export default function App() {
         .modal-close {
           width: 36px; height: 36px;
           border-radius: 50%;
-          border: 1px solid #e2e8f0;
+          border: 1px solid #e8e3db;
           background: #fff;
           cursor: pointer;
           font-size: 14px;
@@ -2014,9 +2016,9 @@ export default function App() {
         .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         .compare-card {
           background: #fff;
-          border-radius: 16px;
+          border-radius: 20px;
           padding: 28px;
-          border: 1.5px solid #e2e8f0;
+          border: 1.5px solid #e8e3db;
           transition: box-shadow 0.2s ease;
         }
         .compare-card:hover { box-shadow: 0 8px 32px rgba(26,26,26,0.07); }
@@ -2028,16 +2030,16 @@ export default function App() {
         .compare-score-block { margin-bottom: 20px; text-align: center; }
         .compare-score-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; font-weight: 500; margin-bottom: 6px; }
         .compare-score-val { font-family: 'DM Serif Display', serif; font-size: 40px; color: #0f172a; margin-bottom: 10px; }
-        .compare-bar-wrap { position: relative; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: visible; margin-bottom: 6px; }
+        .compare-bar-wrap { position: relative; height: 10px; background: #e8e3db; border-radius: 5px; overflow: visible; margin-bottom: 6px; }
         .compare-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
         .compare-threshold-mark { position: absolute; top: -4px; width: 2px; height: 18px; background: #0f172a; border-radius: 1px; transform: translateX(-50%); }
         .compare-threshold-label { font-size: 11px; color: #94a3b8; }
-        .compare-features { padding-top: 12px; border-top: 1px solid #e2e8f0; margin-top: 4px; }
+        .compare-features { padding-top: 12px; border-top: 1px solid #e8e3db; margin-top: 4px; }
         .compare-diff-banner {
           grid-column: 1 / -1;
           background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border: 1px solid #e8e3db;
+          border-radius: 16px;
           padding: 16px 22px;
           display: flex;
           align-items: center;
@@ -2062,7 +2064,7 @@ export default function App() {
         .splash-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(29,78,216,0.14) 0%, transparent 70%);
+          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(249,115,22,0.14) 0%, transparent 70%);
           animation: splashBgPulse 3s ease-in-out infinite;
         }
         .splash-glow {
@@ -2091,7 +2093,7 @@ export default function App() {
         }
         .splash-logo span {
           font-style: italic;
-          background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 30%, #93c5fd 50%, #1d4ed8 70%, #0f172a 100%);
+          background: linear-gradient(135deg, #7c2d12 0%, #f97316 35%, #fbbf24 50%, #f97316 65%, #7c2d12 100%);
           background-size: 220% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2148,7 +2150,7 @@ export default function App() {
         /* ── Logo aurora ── */
         .logo-aurora {
           display: inline-block;
-          background: linear-gradient(135deg, #1d4ed8 0%, #93c5fd 30%, #e2e8f0 50%, #93c5fd 70%, #1d4ed8 100%);
+          background: linear-gradient(135deg, #f97316 0%, #fed7aa 30%, #e8e3db 50%, #fed7aa 70%, #f97316 100%);
           background-size: 250% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2191,10 +2193,10 @@ export default function App() {
           display: grid;
           grid-template-columns: 360px 1fr;
           min-height: calc(100vh - 140px);
-          background: linear-gradient(135deg, #eff6ff 0%, #f8f9fa 100%);
+          background: #f4f1ec;
         }
         .mail-sidebar {
-          border-right: 1px solid rgba(29,78,216,0.12);
+          border-right: 1px solid rgba(249,115,22,0.12);
           display: flex;
           flex-direction: column;
           background: rgba(255,255,255,0.72);
@@ -2204,7 +2206,7 @@ export default function App() {
         }
         .mail-sidebar-header {
           padding: 24px 18px 14px;
-          border-bottom: 1px solid rgba(29,78,216,0.08);
+          border-bottom: 1px solid rgba(249,115,22,0.08);
           flex-shrink: 0;
           background: rgba(255,255,255,0.5);
         }
@@ -2227,20 +2229,20 @@ export default function App() {
           display: flex;
           gap: 12px;
           padding: 13px 16px;
-          border-bottom: 1px solid rgba(29,78,216,0.05);
+          border-bottom: 1px solid rgba(249,115,22,0.05);
           cursor: pointer;
           transition: all 0.15s ease;
           align-items: flex-start;
           border-left: 3px solid transparent;
         }
-        .mail-item:hover { background: rgba(29,78,216,0.04); }
+        .mail-item:hover { background: rgba(249,115,22,0.04); }
         .mail-item-active {
-          background: rgba(29,78,216,0.07) !important;
-          border-left-color: #1d4ed8;
+          background: rgba(249,115,22,0.07) !important;
+          border-left-color: #f97316;
         }
         .mail-item-avatar {
           width: 40px; height: 40px;
-          border-radius: 12px;
+          border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -2280,11 +2282,11 @@ export default function App() {
         /* Mail context card */
         .mail-context-card {
           background: #ffffff;
-          border: 1px solid rgba(29,78,216,0.1);
-          border-radius: 16px;
+          border: 1px solid rgba(249,115,22,0.1);
+          border-radius: 20px;
           padding: 24px 28px;
           margin-bottom: 4px;
-          box-shadow: 0 2px 16px rgba(29,78,216,0.06);
+          box-shadow: 0 2px 16px rgba(249,115,22,0.06);
         }
         .mail-from-row {
           display: flex;
@@ -2294,8 +2296,8 @@ export default function App() {
         }
         .mail-avatar {
           width: 48px; height: 48px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+          border-radius: 20px;
+          background: linear-gradient(135deg, #f97316, #fb923c);
           color: #fff;
           display: flex;
           align-items: center;
@@ -2303,14 +2305,14 @@ export default function App() {
           font-size: 15px;
           font-weight: 700;
           flex-shrink: 0;
-          box-shadow: 0 4px 12px rgba(29,78,216,0.3);
+          box-shadow: 0 4px 12px rgba(249,115,22,0.3);
         }
         .mail-from-info { flex: 1; min-width: 0; }
         .mail-sender-name { font-size: 16px; font-weight: 600; color: #0f172a; }
         .mail-sender-email { font-size: 12px; color: #94a3b8; margin-top: 2px; }
         .mail-context-date { font-size: 11px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; text-align: right; line-height: 1.6; }
-        .mail-subject-line { font-size: 13px; color: #64748b; margin-bottom: 12px; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; }
-        .mail-subject-label { font-weight: 600; color: #1d4ed8; }
+        .mail-subject-line { font-size: 13px; color: #64748b; margin-bottom: 12px; padding: 10px 14px; background: #f4f1ec; border-radius: 8px; }
+        .mail-subject-label { font-weight: 600; color: #f97316; }
         .mail-body-details summary {
           font-size: 11px;
           letter-spacing: 1.5px;
@@ -2326,7 +2328,7 @@ export default function App() {
           font-weight: 300;
           line-height: 1.7;
           white-space: pre-wrap;
-          background: #f8f9fa;
+          background: #f4f1ec;
           padding: 14px 18px;
           border-radius: 8px;
           max-height: 200px;
@@ -2379,7 +2381,7 @@ export default function App() {
           >
             <div className="tab-pip" />
             Mail
-            <span className="tab-fair-tag" style={{ background: "rgba(29,78,216,0.12)", color: "#1d4ed8" }}>AUTO</span>
+            <span className="tab-fair-tag" style={{ background: "rgba(249,115,22,0.12)", color: "#f97316" }}>AUTO</span>
           </button>
         </nav>
 
@@ -2527,7 +2529,7 @@ export default function App() {
                   <button
                     className={`filter-btn filter-btn-star ${filterFavorites ? "active" : ""}`}
                     onClick={() => setFilterFavorites(f => !f)}
-                    style={{ background: filterFavorites ? "#fbbf24" : "#fff", border: "1px solid #e2e8f0", borderRadius: "100px", padding: "8px 16px" }}
+                    style={{ background: filterFavorites ? "#fbbf24" : "#fff", border: "1px solid #e8e3db", borderRadius: "100px", padding: "8px 16px" }}
                   >
                     ★ Favoris {favorites.size > 0 && `(${favorites.size})`}
                   </button>
