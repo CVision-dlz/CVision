@@ -494,6 +494,9 @@ export default function App() {
   const [expandedRow, setExpandedRow]   = useState(null)
   const [selectedRows, setSelectedRows] = useState([])
   const [showCompare, setShowCompare]   = useState(false)
+  const [filterModel, setFilterModel]   = useState("all")
+  const [filterDecision, setFilterDecision] = useState("all")
+  const [searchQuery, setSearchQuery]   = useState("")
 
   function toggleSelect(row) {
     setSelectedRows(prev => {
@@ -539,6 +542,18 @@ export default function App() {
     } catch { setErrorFair("Erreur lors de l'envoi du fichier.") }
     finally { setLoadingFair(false) }
   }
+
+  const totalSelected = history.filter(r => r.decision?.includes("Sélectionné") || r.decision === "Inviter").length
+  const totalFair     = history.filter(r => r.model === "fair").length
+  const selectRate    = history.length > 0 ? Math.round(totalSelected / history.length * 100) : 0
+  const filteredHistory = history.filter(row => {
+    const sel = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+    if (filterModel !== "all" && row.model !== filterModel) return false
+    if (filterDecision === "selected" && !sel) return false
+    if (filterDecision === "rejected" && sel) return false
+    if (searchQuery && !row.filename?.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    return true
+  })
 
   return (
     <>
@@ -1244,6 +1259,88 @@ export default function App() {
         }
         .hf-name { color: #6b6560; }
         .hf-val { font-weight: 600; font-size: 12px; }
+        /* ── KPI cards ── */
+        .kpi-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          margin-bottom: 28px;
+        }
+        .kpi-card {
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 14px;
+          padding: 20px 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .kpi-label {
+          font-size: 10px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #a09890;
+          font-weight: 500;
+        }
+        .kpi-value {
+          font-family: 'DM Serif Display', serif;
+          font-size: 32px;
+          color: #1a1a1a;
+          line-height: 1.1;
+        }
+        .kpi-sub { font-size: 12px; color: #a09890; font-weight: 300; }
+
+        /* ── Barre de filtres ── */
+        .filter-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .search-input {
+          padding: 9px 16px;
+          border: 1px solid #e2ddd8;
+          border-radius: 100px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #1a1a1a;
+          background: #fff;
+          outline: none;
+          width: 220px;
+          transition: border-color 0.2s;
+        }
+        .search-input::placeholder { color: #c0b8b0; }
+        .search-input:focus { border-color: #8b6f47; }
+        .filter-group {
+          display: flex;
+          background: #fff;
+          border: 1px solid #e2ddd8;
+          border-radius: 100px;
+          overflow: hidden;
+        }
+        .filter-btn {
+          padding: 8px 16px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          color: #a09890;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+        .filter-btn:hover { color: #6b6560; background: #faf9f7; }
+        .filter-btn.active { background: #1a1a1a; color: #fff; border-radius: 100px; }
+        .filter-results {
+          margin-left: auto;
+          font-size: 12px;
+          color: #a09890;
+          font-weight: 300;
+          white-space: nowrap;
+        }
+
         .toggle-mode-btn {
           font-size: 10px;
           letter-spacing: 1px;
@@ -1441,7 +1538,7 @@ export default function App() {
             onClick={() => setActiveTab(2)}
           >
             <div className="tab-pip" />
-            Historique
+            Dashboard RH
           </button>
         </nav>
 
@@ -1475,10 +1572,11 @@ export default function App() {
 
         {activeTab === 2 && (
           <div className="history-page">
+            {/* Header */}
             <div className="history-header">
               <div>
-                <div className="history-title">Historique des décisions</div>
-                <div className="history-sub">{history.length} décision{history.length !== 1 ? "s" : ""} enregistrée{history.length !== 1 ? "s" : ""}</div>
+                <div className="history-title">Dashboard RH</div>
+                <div className="history-sub">{history.length} analyse{history.length !== 1 ? "s" : ""} enregistrée{history.length !== 1 ? "s" : ""}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 {selectedRows.length > 0 && (
@@ -1497,79 +1595,135 @@ export default function App() {
               </div>
             </div>
 
+            {/* KPI Cards */}
+            {history.length > 0 && (
+              <div className="kpi-grid">
+                <div className="kpi-card">
+                  <div className="kpi-label">CVs analysés</div>
+                  <div className="kpi-value">{history.length}</div>
+                  <div className="kpi-sub">au total</div>
+                </div>
+                <div className="kpi-card">
+                  <div className="kpi-label">Sélectionnés</div>
+                  <div className="kpi-value val-pos">{totalSelected}</div>
+                  <div className="kpi-sub">{selectRate}% du total</div>
+                </div>
+                <div className="kpi-card">
+                  <div className="kpi-label">Refusés</div>
+                  <div className="kpi-value val-neg">{history.length - totalSelected}</div>
+                  <div className="kpi-sub">{100 - selectRate}% du total</div>
+                </div>
+                <div className="kpi-card">
+                  <div className="kpi-label">Modèle FAIR</div>
+                  <div className="kpi-value">{totalFair}</div>
+                  <div className="kpi-sub">analyse{totalFair !== 1 ? "s" : ""} équitable{totalFair !== 1 ? "s" : ""}</div>
+                </div>
+              </div>
+            )}
+
             {historyLoading && history.length === 0 ? (
               <div className="history-empty">Chargement…</div>
             ) : history.length === 0 ? (
-              <div className="history-empty">Aucune décision enregistrée pour l'instant.</div>
+              <div className="history-empty">Aucune analyse enregistrée pour l'instant.</div>
             ) : (
-              <div className="history-table-wrap">
-                <table className="history-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "40px" }}></th>
-                      <th>Date</th>
-                      <th>Fichier</th>
-                      <th>Modèle</th>
-                      <th>Décision</th>
-                      <th>Score</th>
-                      <th>Seuil</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((row) => {
-                      const isSelected = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
-                      const date = new Date(row.created_at)
-                      const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })
-                      const timeStr = date.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })
-                      const isExpanded = expandedRow === row.id
-                      return (
-                        <>
-                          <tr
-                            key={row.id}
-                            className={`history-row ${isExpanded ? "expanded" : ""} ${selectedRows.find(r => r.id === row.id) ? "selected-row" : ""}`}
-                            onClick={() => setExpandedRow(isExpanded ? null : row.id)}
-                          >
-                            <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
-                              <input
-                                type="checkbox"
-                                className="row-checkbox"
-                                checked={!!selectedRows.find(r => r.id === row.id)}
-                                onChange={() => toggleSelect(row)}
-                              />
-                            </td>
-                            <td className="td-date">{dateStr}<br /><span className="td-time">{timeStr}</span></td>
-                            <td className="td-file">{row.filename}</td>
-                            <td>
-                              <span className={`model-badge ${row.model === "fair" ? "badge-fair" : "badge-std"}`}>
-                                {row.model === "fair" ? "FAIR" : "Standard"}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`decision-pill-sm ${isSelected ? "invite" : "reject"}`}>
-                                <span className="dot" />
-                                {isSelected ? "Sélectionné" : "Refusé"}
-                              </span>
-                            </td>
-                            <td className={`td-score ${isSelected ? "val-pos" : "val-neg"}`}>
-                              {(row.score * 100).toFixed(1)}%
-                            </td>
-                            <td className="td-threshold">{(row.threshold * 100).toFixed(1)}%</td>
-                            <td className="td-expand">{isExpanded ? "▲" : "▼"}</td>
-                          </tr>
-                          {isExpanded && row.top_features?.length > 0 && (
-                            <tr key={row.id + "-detail"} className="history-detail-row">
-                              <td colSpan={8}>
-                                <HistoryFeatureDetail features={row.top_features} />
+              <>
+                {/* Barre de filtres */}
+                <div className="filter-bar">
+                  <input
+                    className="search-input"
+                    placeholder="Rechercher un fichier…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                  <div className="filter-group">
+                    <button className={`filter-btn ${filterModel === "all" ? "active" : ""}`} onClick={() => setFilterModel("all")}>Tous</button>
+                    <button className={`filter-btn ${filterModel === "standard" ? "active" : ""}`} onClick={() => setFilterModel("standard")}>Standard</button>
+                    <button className={`filter-btn ${filterModel === "fair" ? "active" : ""}`} onClick={() => setFilterModel("fair")}>FAIR</button>
+                  </div>
+                  <div className="filter-group">
+                    <button className={`filter-btn ${filterDecision === "all" ? "active" : ""}`} onClick={() => setFilterDecision("all")}>Toutes</button>
+                    <button className={`filter-btn ${filterDecision === "selected" ? "active" : ""}`} onClick={() => setFilterDecision("selected")}>Sélectionnés</button>
+                    <button className={`filter-btn ${filterDecision === "rejected" ? "active" : ""}`} onClick={() => setFilterDecision("rejected")}>Refusés</button>
+                  </div>
+                  <span className="filter-results">{filteredHistory.length} résultat{filteredHistory.length !== 1 ? "s" : ""}</span>
+                </div>
+
+                {/* Tableau */}
+                <div className="history-table-wrap">
+                  <table className="history-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "40px" }}></th>
+                        <th>Date</th>
+                        <th>Fichier</th>
+                        <th>Modèle</th>
+                        <th>Décision</th>
+                        <th>Score</th>
+                        <th>Seuil</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredHistory.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} style={{ textAlign: "center", padding: "40px", color: "#a09890", fontSize: "13px" }}>
+                            Aucun résultat pour ces filtres.
+                          </td>
+                        </tr>
+                      ) : filteredHistory.map((row) => {
+                        const isRowSel = row.decision?.includes("Sélectionné") || row.decision === "Inviter"
+                        const date    = new Date(row.created_at)
+                        const dateStr = date.toLocaleDateString("fr-BE", { day: "2-digit", month: "2-digit", year: "numeric" })
+                        const timeStr = date.toLocaleTimeString("fr-BE", { hour: "2-digit", minute: "2-digit" })
+                        const isExpanded = expandedRow === row.id
+                        return (
+                          <>
+                            <tr
+                              key={row.id}
+                              className={`history-row ${isExpanded ? "expanded" : ""} ${selectedRows.find(r => r.id === row.id) ? "selected-row" : ""}`}
+                              onClick={() => setExpandedRow(isExpanded ? null : row.id)}
+                            >
+                              <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
+                                <input
+                                  type="checkbox"
+                                  className="row-checkbox"
+                                  checked={!!selectedRows.find(r => r.id === row.id)}
+                                  onChange={() => toggleSelect(row)}
+                                />
                               </td>
+                              <td className="td-date">{dateStr}<br /><span className="td-time">{timeStr}</span></td>
+                              <td className="td-file">{row.filename}</td>
+                              <td>
+                                <span className={`model-badge ${row.model === "fair" ? "badge-fair" : "badge-std"}`}>
+                                  {row.model === "fair" ? "FAIR" : "Standard"}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={`decision-pill-sm ${isRowSel ? "invite" : "reject"}`}>
+                                  <span className="dot" />
+                                  {isRowSel ? "Sélectionné" : "Refusé"}
+                                </span>
+                              </td>
+                              <td className={`td-score ${isRowSel ? "val-pos" : "val-neg"}`}>
+                                {(row.score * 100).toFixed(1)}%
+                              </td>
+                              <td className="td-threshold">{(row.threshold * 100).toFixed(1)}%</td>
+                              <td className="td-expand">{isExpanded ? "▲" : "▼"}</td>
                             </tr>
-                          )}
-                        </>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            {isExpanded && row.top_features?.length > 0 && (
+                              <tr key={row.id + "-detail"} className="history-detail-row">
+                                <td colSpan={8}>
+                                  <HistoryFeatureDetail features={row.top_features} />
+                                </td>
+                              </tr>
+                            )}
+                          </>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
 
             {showCompare && selectedRows.length === 2 && (
