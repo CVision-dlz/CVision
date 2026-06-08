@@ -297,16 +297,18 @@ function FairResultPanel({ result, filename }) {
 // ─── Splash screen ─────────────────────────────────────────────────────────
 function SplashScreen({ onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2400)
+    const t = setTimeout(onDone, 3200)
     return () => clearTimeout(t)
   }, [onDone])
 
   return (
     <div className="splash-overlay">
+      <div className="splash-bg" />
+      <div className="splash-glow" />
       <div className="splash-content">
         <div className="splash-logo">CV<span>ision</span></div>
         <div className="splash-line-wrap"><div className="splash-line" /></div>
-        <div className="splash-sub">Screening IA</div>
+        <div className="splash-sub">Screening IA · Recrutement intelligent</div>
       </div>
     </div>
   )
@@ -439,7 +441,7 @@ function CompareModal({ rows, onClose }) {
   )
 }
 
-// ─── Dropzone réutilisable ──────────────────────────────────────────────────
+// ─── Dropzone réutilisable (style Aceternity) ──────────────────────────────
 function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, desc }) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef()
@@ -453,38 +455,56 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
   return (
     <>
       <p className="eyebrow">{eyebrow}</p>
-      <h1 className="headline">
-        {headline}<br /><em>{headlineEm}</em>
-      </h1>
+      <h1 className="headline">{headline}<br /><em>{headlineEm}</em></h1>
       <p className="desc">{desc}</p>
 
       <div
-        className={`dropzone ${dragging ? "active" : ""}`}
+        className={`dz-ace ${dragging ? "dz-ace-drag" : ""}`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         onClick={() => inputRef.current.click()}
       >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".txt"
-          style={{ display: "none" }}
-          onChange={(e) => onFile(e.target.files[0])}
-        />
-        {loading ? (
-          <>
-            <div className="spinner" />
-            <div className="dropzone-title">Analyse en cours…</div>
-            <div className="dropzone-sub">{filename}</div>
-          </>
-        ) : (
-          <>
-            <span className="dropzone-icon">📄</span>
-            <div className="dropzone-title">Déposez votre CV ici</div>
-            <div className="dropzone-sub">ou cliquez pour sélectionner un fichier .txt</div>
-          </>
-        )}
+        <input ref={inputRef} type="file" accept=".txt" style={{ display: "none" }}
+          onChange={(e) => onFile(e.target.files[0])} />
+        <div className="dz-grid-bg" />
+        <div className="dz-inner">
+          {loading ? (
+            <>
+              <div className="dz-spin" />
+              <div className="dz-label-title">Analyse en cours…</div>
+              <div className="dz-label-sub">{filename}</div>
+            </>
+          ) : filename ? (
+            <>
+              <div className="dz-file-display">
+                <div className="dz-file-card">
+                  <span style={{ fontSize: "22px" }}>📄</span>
+                  <div>
+                    <div className="dz-file-name">{filename}</div>
+                    <div className="dz-file-ok">Fichier prêt · cliquez pour changer</div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className={`dz-float-wrap ${dragging ? "dz-floating-drag" : ""}`}>
+                <div className="dz-card-back" />
+                <div className="dz-card-front">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                    stroke="#8b6f47" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="dz-label-title">Déposez votre CV ici</div>
+              <div className="dz-label-sub">Glissez-déposez ou cliquez · Format .txt uniquement</div>
+            </>
+          )}
+        </div>
       </div>
     </>
   )
@@ -728,51 +748,123 @@ export default function App() {
           margin-bottom: 48px;
         }
 
-        .dropzone {
-          border: 1.5px dashed #d4c4b0;
-          border-radius: 14px;
-          padding: 44px 32px;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s ease;
+        /* ── Dropzone Aceternity-style ── */
+        .dz-ace {
+          position: relative;
+          border-radius: 16px;
+          border: 1.5px solid #e2ddd8;
           background: #fff;
+          padding: 52px 32px;
+          cursor: pointer;
+          overflow: hidden;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .dropzone:hover, .dropzone.active {
+        .dz-ace:hover {
           border-color: #8b6f47;
+          box-shadow: 0 0 0 4px rgba(139,111,71,0.06), 0 8px 32px rgba(139,111,71,0.07);
+        }
+        .dz-ace-drag {
+          border-color: #8b6f47 !important;
+          border-style: dashed;
           background: #fdf9f4;
+          box-shadow: 0 0 0 5px rgba(139,111,71,0.09) !important;
         }
-
-        .dropzone-icon {
-          font-size: 36px;
-          margin-bottom: 14px;
-          display: block;
+        .dz-grid-bg {
+          position: absolute;
+          inset: 0;
+          background-image: radial-gradient(circle, #cec0b0 1px, transparent 1px);
+          background-size: 22px 22px;
+          mask-image: radial-gradient(ellipse 85% 85% at center, white 15%, transparent 100%);
+          -webkit-mask-image: radial-gradient(ellipse 85% 85% at center, white 15%, transparent 100%);
+          opacity: 0.55;
+          pointer-events: none;
         }
-
-        .dropzone-title {
-          font-family: 'DM Serif Display', serif;
-          font-size: 17px;
-          color: #1a1a1a;
+        .dz-inner {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          text-align: center;
+        }
+        .dz-float-wrap {
+          position: relative;
+          width: 76px; height: 88px;
           margin-bottom: 6px;
+          animation: dzFloat 3.5s ease-in-out infinite;
         }
-
-        .dropzone-sub {
-          font-size: 13px;
+        .dz-floating-drag { animation: dzBounce 0.4s ease-in-out infinite alternate !important; }
+        .dz-card-front {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(145deg, #fff, #fdf9f4);
+          border: 1.5px solid #e2ddd8;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+          z-index: 2;
+          transition: box-shadow 0.3s ease;
+        }
+        .dz-ace:hover .dz-card-front {
+          box-shadow: 0 10px 32px rgba(139,111,71,0.12);
+        }
+        .dz-card-back {
+          position: absolute;
+          top: 8px; left: -8px; right: -8px; bottom: -8px;
+          background: #fdf3e8;
+          border: 1.5px solid #e8d5bf;
+          border-radius: 12px;
+          z-index: 1;
+        }
+        @keyframes dzFloat {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          33%  { transform: translateY(-10px) rotate(1.5deg); }
+          66%  { transform: translateY(-5px) rotate(-1deg); }
+        }
+        @keyframes dzBounce {
+          from { transform: translateY(0) rotate(0deg); }
+          to   { transform: translateY(-16px) rotate(2deg); }
+        }
+        .dz-label-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 18px;
+          color: #1a1a1a;
+        }
+        .dz-label-sub {
+          font-size: 12px;
           color: #a09890;
           font-weight: 300;
+          max-width: 260px;
+          line-height: 1.6;
         }
-
-        .spinner {
-          width: 28px;
-          height: 28px;
+        .dz-spin {
+          width: 36px; height: 36px;
           border: 2px solid #e2ddd8;
           border-top-color: #8b6f47;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
-          margin: 0 auto 14px;
+          margin-bottom: 2px;
         }
-
         @keyframes spin { to { transform: rotate(360deg); } }
+        .dz-file-display { animation: fileIn 0.45s cubic-bezier(0.16,1,0.3,1); }
+        @keyframes fileIn {
+          from { opacity: 0; transform: scale(0.88) translateY(10px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .dz-file-card {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          background: #faf9f7;
+          border: 1px solid #e2ddd8;
+          border-radius: 12px;
+          padding: 14px 20px;
+        }
+        .dz-file-name { font-size: 14px; font-weight: 500; color: #1a1a1a; text-align: left; }
+        .dz-file-ok { font-size: 11px; color: #2d7a4f; font-weight: 500; margin-top: 2px; }
 
         .error-msg {
           margin-top: 14px;
@@ -1527,64 +1619,102 @@ export default function App() {
         }
         .compare-diff-val { font-weight: 700; font-size: 15px; }
 
-        /* ── Splash screen ── */
+        /* ── Splash screen (cinematic) ── */
         .splash-overlay {
           position: fixed;
           inset: 0;
-          background: #faf9f7;
+          background: #0f0e0c;
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
-          animation: splashFadeOut 0.7s cubic-bezier(0.4, 0, 0.2, 1) 1.7s forwards;
+          overflow: hidden;
+          animation: splashFadeOut 1s cubic-bezier(0.4, 0, 0.2, 1) 2.4s forwards;
+        }
+        .splash-bg {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(139,111,71,0.14) 0%, transparent 70%);
+          animation: splashBgPulse 3s ease-in-out infinite;
+        }
+        .splash-glow {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -58%);
+          width: 900px; height: 500px;
+          background: radial-gradient(ellipse, rgba(196,149,106,0.07) 0%, transparent 70%);
+          animation: splashGlowFloat 2.5s ease-in-out infinite alternate;
         }
         .splash-content {
+          position: relative;
+          z-index: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
         }
         .splash-logo {
           font-family: 'DM Serif Display', serif;
-          font-size: 80px;
-          letter-spacing: -4px;
-          color: #1a1a1a;
+          font-size: clamp(80px, 13vw, 160px);
+          letter-spacing: -0.06em;
+          line-height: 1;
+          color: #fff;
           opacity: 0;
-          animation: splashLogoIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+          animation: splashLogoIn 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
         }
-        .splash-logo span { color: #8b6f47; font-style: italic; }
-        .splash-line-wrap { overflow: hidden; margin: 14px 0 18px; }
+        .splash-logo span {
+          font-style: italic;
+          background: linear-gradient(135deg, #c4956a 0%, #f0d9b5 35%, #fff8ee 50%, #f0d9b5 65%, #c4956a 100%);
+          background-size: 220% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: splashAurora 4s ease infinite 1.4s;
+        }
+        .splash-line-wrap { overflow: hidden; margin: 22px 0 26px; }
         .splash-line {
-          width: 56px;
-          height: 1.5px;
-          background: linear-gradient(90deg, transparent, #8b6f47, transparent);
+          width: 80px; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(196,149,106,0.9), transparent);
           transform: scaleX(0);
           transform-origin: center;
-          animation: splashLineIn 0.6s ease-out 0.7s forwards;
+          animation: splashLineIn 0.9s ease-out 1.1s forwards;
         }
         .splash-sub {
           font-size: 10px;
           letter-spacing: 5px;
           text-transform: uppercase;
-          color: #a09890;
-          font-weight: 500;
+          color: rgba(196,149,106,0.65);
+          font-weight: 400;
           opacity: 0;
-          animation: splashSubIn 0.5s ease 1.1s forwards;
+          animation: splashSubIn 0.7s ease 1.5s forwards;
         }
         @keyframes splashLogoIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
+          from { opacity: 0; transform: translateY(36px) scale(0.94); filter: blur(12px); }
+          to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         @keyframes splashLineIn {
           from { transform: scaleX(0); }
           to   { transform: scaleX(1); }
         }
         @keyframes splashSubIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(14px); letter-spacing: 2px; }
+          to   { opacity: 1; transform: translateY(0); letter-spacing: 5px; }
+        }
+        @keyframes splashAurora {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes splashBgPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.65; }
+        }
+        @keyframes splashGlowFloat {
+          from { transform: translate(-50%, -62%); opacity: 0.5; }
+          to   { transform: translate(-50%, -54%); opacity: 1; }
         }
         @keyframes splashFadeOut {
-          from { opacity: 1; transform: translateY(0); }
-          to   { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+          0%   { opacity: 1; transform: scale(1); }
+          100% { opacity: 0; transform: scale(1.04); pointer-events: none; }
         }
 
         /* ── Logo aurora (header) ── */
