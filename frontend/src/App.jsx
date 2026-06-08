@@ -549,7 +549,7 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
                 <div className="dz-card-back" />
                 <div className="dz-card-front">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                    stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    stroke="#0ea5e9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
@@ -724,7 +724,7 @@ export default function App() {
           z-index: 0;
           background: radial-gradient(
             700px circle at var(--mouse-x) var(--mouse-y),
-            rgba(59,130,246,0.06),
+            rgba(14,165,233,0.06),
             transparent 42%
           );
         }
@@ -748,18 +748,18 @@ export default function App() {
           letter-spacing: -0.5px;
         }
 
-        .logo span { color: #3b82f6; }
+        .logo span { color: #0ea5e9; }
 
         .badge {
           font-size: 11px;
           font-weight: 500;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #3b82f6;
-          border: 1px solid #bfdbfe;
+          color: #0ea5e9;
+          border: 1px solid #bae6fd;
           padding: 6px 16px;
           border-radius: 100px;
-          background: #eff6ff;
+          background: #f0f9ff;
         }
 
         /* ── Onglets ── */
@@ -778,10 +778,10 @@ export default function App() {
           position: absolute;
           bottom: 0;
           height: 2px;
-          background: linear-gradient(90deg, transparent 0%, #3b82f6 30%, #60a5fa 50%, #3b82f6 70%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, #0ea5e9 30%, #7dd3fc 50%, #0ea5e9 70%, transparent 100%);
           transition: left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
           border-radius: 2px;
-          box-shadow: 0 0 8px rgba(59,130,246,0.4);
+          box-shadow: 0 0 8px rgba(14,165,233,0.4);
         }
 
         .tab-btn {
@@ -817,9 +817,9 @@ export default function App() {
         }
 
         .tab-btn.active .tab-pip {
-          background: #3b82f6;
+          background: #0ea5e9;
           opacity: 1;
-          box-shadow: 0 0 6px rgba(59,130,246,0.5);
+          box-shadow: 0 0 6px rgba(14,165,233,0.5);
         }
 
         .tab-fair-tag {
@@ -852,7 +852,7 @@ export default function App() {
         }
 
         .tab-bg-0 .left {
-          background: linear-gradient(155deg, rgba(59,130,246,0.07) 0%, #ffffff 38%);
+          background: linear-gradient(155deg, rgba(14,165,233,0.07) 0%, #ffffff 38%);
         }
         .tab-bg-1 .left {
           background: linear-gradient(155deg, rgba(45,122,79,0.07) 0%, #ffffff 38%);
@@ -862,7 +862,7 @@ export default function App() {
           font-size: 11px;
           letter-spacing: 3px;
           text-transform: uppercase;
-          color: #3b82f6;
+          color: #0ea5e9;
           font-weight: 500;
           margin-bottom: 20px;
           display: inline-flex;
@@ -874,7 +874,7 @@ export default function App() {
           display: inline-block;
           width: 28px;
           height: 1px;
-          background: #3b82f6;
+          background: #0ea5e9;
           margin-left: 10px;
           flex-shrink: 0;
           transform-origin: left;
@@ -897,7 +897,7 @@ export default function App() {
 
         .headline em {
           font-style: italic;
-          color: #3b82f6;
+          color: #0ea5e9;
         }
 
         .desc {
@@ -920,14 +920,14 @@ export default function App() {
           transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .dz-ace:hover {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 4px rgba(59,130,246,0.06), 0 8px 32px rgba(59,130,246,0.07);
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 4px rgba(14,165,233,0.06), 0 8px 32px rgba(14,165,233,0.07);
         }
         .dz-ace-drag {
-          border-color: #3b82f6 !important;
+          border-color: #0ea5e9 !important;
           border-style: dashed;
-          background: #eff6ff;
-          box-shadow: 0 0 0 5px rgba(59,130,246,0.09) !important;
+          background: #f0f9ff;
+          box-shadow: 0 0 0 5px rgba(14,165,233,0.09) !important;
         }
 
         /* Scan line on drag */
@@ -938,8 +938,8 @@ export default function App() {
           right: 10%;
           height: 2px;
           top: 0;
-          background: linear-gradient(90deg, transparent, rgba(59,130,246,0.9), transparent);
-          box-shadow: 0 0 14px rgba(59,130,246,0.4);
+          background: linear-gradient(90deg, transparent, rgba(14,165,233,0.9), transparent);
+          box-shadow: 0 0 14px rgba(14,165,233,0.4);
           animation: scanLine 1.1s ease-in-out infinite;
           border-radius: 1px;
           pointer-events: none;
@@ -980,7 +980,7 @@ export default function App() {
         .dz-card-front {
           position: absolute;
           inset: 0;
-          background: linear-gradient(145deg, #fff, #eff6ff);
+          background: linear-gradient(145deg, #fff, #f0f9ff);
           border: 1.5px solid #e2e8f0;
           border-radius: 12px;
           display: flex;
@@ -991,13 +991,13 @@ export default function App() {
           transition: box-shadow 0.3s ease;
         }
         .dz-ace:hover .dz-card-front {
-          box-shadow: 0 10px 32px rgba(59,130,246,0.12);
+          box-shadow: 0 10px 32px rgba(14,165,233,0.12);
         }
         .dz-card-back {
           position: absolute;
           top: 8px; left: -8px; right: -8px; bottom: -8px;
-          background: #eff6ff;
-          border: 1.5px solid #dbeafe;
+          background: #f0f9ff;
+          border: 1.5px solid #e0f2fe;
           border-radius: 12px;
           z-index: 1;
         }
@@ -1025,7 +1025,7 @@ export default function App() {
         .dz-spin {
           width: 36px; height: 36px;
           border: 2px solid #e2e8f0;
-          border-top-color: #3b82f6;
+          border-top-color: #0ea5e9;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }
@@ -1067,7 +1067,7 @@ export default function App() {
           color: inherit;
         }
         .dz-step-done .dz-step-icon { color: #2d7a4f; }
-        .dz-step-active .dz-step-icon { color: #3b82f6; }
+        .dz-step-active .dz-step-icon { color: #0ea5e9; }
 
         .dz-file-display { animation: fileIn 0.45s cubic-bezier(0.16,1,0.3,1); }
         @keyframes fileIn {
@@ -1260,9 +1260,9 @@ export default function App() {
           transition: all 0.2s ease;
         }
         .tag:hover {
-          border-color: #3b82f6;
-          color: #3b82f6;
-          background: #eff6ff;
+          border-color: #0ea5e9;
+          color: #0ea5e9;
+          background: #f0f9ff;
         }
 
         details summary {
@@ -1314,15 +1314,15 @@ export default function App() {
           padding: 4px 0;
           transition: background 0.2s ease;
         }
-        .expl-row:hover { background: rgba(59,130,246,0.04); }
+        .expl-row:hover { background: rgba(14,165,233,0.04); }
 
         .expl-decisive {
           animation: decisiveGlow 1.4s ease 0.5s;
         }
         @keyframes decisiveGlow {
-          0%   { background: rgba(59,130,246,0); }
-          30%  { background: rgba(59,130,246,0.10); }
-          100% { background: rgba(59,130,246,0); }
+          0%   { background: rgba(14,165,233,0); }
+          30%  { background: rgba(14,165,233,0.10); }
+          100% { background: rgba(14,165,233,0); }
         }
 
         .expl-name {
@@ -1430,7 +1430,7 @@ export default function App() {
           font-size: 9px;
           letter-spacing: 2.5px;
           text-transform: uppercase;
-          color: #3b82f6;
+          color: #0ea5e9;
           font-weight: 600;
           margin-bottom: 10px;
           padding-bottom: 6px;
@@ -1476,19 +1476,19 @@ export default function App() {
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        .refresh-btn:hover { background: #eff6ff; border-color: #3b82f6; color: #3b82f6; }
+        .refresh-btn:hover { background: #f0f9ff; border-color: #0ea5e9; color: #0ea5e9; }
         .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ── Insight RH ── */
         .insight-rh {
-          background: linear-gradient(135deg, rgba(59,130,246,0.07), rgba(59,130,246,0.03));
-          border: 1px solid rgba(59,130,246,0.2);
+          background: linear-gradient(135deg, rgba(14,165,233,0.07), rgba(14,165,233,0.03));
+          border: 1px solid rgba(14,165,233,0.2);
           border-radius: 14px;
           padding: 16px 22px;
           margin-bottom: 28px;
           font-size: 13px;
           font-weight: 300;
-          color: #1e40af;
+          color: #0369a1;
           line-height: 1.7;
           display: flex;
           align-items: center;
@@ -1524,7 +1524,7 @@ export default function App() {
         .kpi-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 16px 40px rgba(26,26,26,0.09);
-          border-color: rgba(59,130,246,0.3);
+          border-color: rgba(14,165,233,0.3);
         }
         .kpi-card::before {
           content: '';
@@ -1590,7 +1590,7 @@ export default function App() {
           transition: border-color 0.2s;
         }
         .search-input::placeholder { color: #94a3b8; }
-        .search-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .search-input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.08); }
         .filter-group { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 100px; overflow: hidden; }
         .filter-btn {
           padding: 8px 16px;
@@ -1612,9 +1612,9 @@ export default function App() {
           font-size: 10px;
           letter-spacing: 1px;
           text-transform: uppercase;
-          color: #3b82f6;
+          color: #0ea5e9;
           background: none;
-          border: 1px solid #bfdbfe;
+          border: 1px solid #bae6fd;
           border-radius: 100px;
           padding: 4px 12px;
           cursor: pointer;
@@ -1623,7 +1623,7 @@ export default function App() {
           transition: all 0.2s ease;
           white-space: nowrap;
         }
-        .toggle-mode-btn:hover { background: #eff6ff; border-color: #3b82f6; }
+        .toggle-mode-btn:hover { background: #f0f9ff; border-color: #0ea5e9; }
         .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
 
         /* ── Table ── */
@@ -1654,8 +1654,8 @@ export default function App() {
           transition: background 0.15s ease;
           position: relative;
         }
-        .history-row:hover { background: rgba(59,130,246,0.04); }
-        .history-row.expanded { background: #eff6ff; }
+        .history-row:hover { background: rgba(14,165,233,0.04); }
+        .history-row.expanded { background: #f0f9ff; }
         .history-row td {
           padding: 16px 20px;
           border-bottom: 1px solid #f1f5f9;
@@ -1670,7 +1670,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #3b82f6;
+          background: #0ea5e9;
           border-radius: 0 2px 2px 0;
           opacity: 1;
         }
@@ -1679,7 +1679,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #3b82f6;
+          background: #0ea5e9;
           border-radius: 0 2px 2px 0;
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -1727,7 +1727,7 @@ export default function App() {
           border-radius: 100px;
         }
         .badge-fair { background: #edf7f0; color: #2d7a4f; border: 1px solid #c3e6d0; }
-        .badge-std  { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+        .badge-std  { background: #f0f9ff; color: #0ea5e9; border: 1px solid #bae6fd; }
 
         .decision-pill-sm {
           display: inline-flex;
@@ -1743,7 +1743,7 @@ export default function App() {
         .row-checkbox {
           appearance: none;
           width: 17px; height: 17px;
-          border: 1.5px solid #bfdbfe;
+          border: 1.5px solid #bae6fd;
           border-radius: 5px;
           background: white;
           cursor: pointer;
@@ -1753,8 +1753,8 @@ export default function App() {
           flex-shrink: 0;
         }
         .row-checkbox:checked {
-          background: #3b82f6;
-          border-color: #3b82f6;
+          background: #0ea5e9;
+          border-color: #0ea5e9;
         }
         .row-checkbox:checked::after {
           content: "✓";
@@ -1762,14 +1762,14 @@ export default function App() {
           font-size: 11px;
           line-height: 1;
         }
-        .row-checkbox:hover { border-color: #3b82f6; }
+        .row-checkbox:hover { border-color: #0ea5e9; }
 
-        .history-row.selected-row { background: rgba(59,130,246,0.04); }
+        .history-row.selected-row { background: rgba(14,165,233,0.04); }
 
         /* ── Bouton comparer ── */
         .compare-btn {
           padding: 10px 22px;
-          background: #3b82f6;
+          background: #0ea5e9;
           border: none;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
@@ -1781,14 +1781,14 @@ export default function App() {
           margin-left: 12px;
         }
         .compare-btn:hover {
-          background: #2563eb;
+          background: #0284c7;
           transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(59,130,246,0.3);
+          box-shadow: 0 6px 18px rgba(14,165,233,0.3);
         }
 
         /* ── Detail row ── */
         .history-detail-row td {
-          background: #eff6ff;
+          background: #f0f9ff;
           padding: 0 20px 16px 20px;
           border-bottom: 1px solid #e2e8f0;
         }
@@ -1797,7 +1797,7 @@ export default function App() {
           font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #3b82f6;
+          color: #0ea5e9;
           font-weight: 600;
           margin-bottom: 10px;
         }
@@ -1914,7 +1914,7 @@ export default function App() {
         .splash-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(59,130,246,0.14) 0%, transparent 70%);
+          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(14,165,233,0.14) 0%, transparent 70%);
           animation: splashBgPulse 3s ease-in-out infinite;
         }
         .splash-glow {
@@ -1943,7 +1943,7 @@ export default function App() {
         }
         .splash-logo span {
           font-style: italic;
-          background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 35%, #93c5fd 50%, #3b82f6 65%, #1d4ed8 100%);
+          background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 35%, #bae6fd 50%, #0ea5e9 65%, #0284c7 100%);
           background-size: 220% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2000,7 +2000,7 @@ export default function App() {
         /* ── Logo aurora ── */
         .logo-aurora {
           display: inline-block;
-          background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 30%, #93c5fd 50%, #60a5fa 70%, #3b82f6 100%);
+          background: linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 30%, #bae6fd 50%, #7dd3fc 70%, #0ea5e9 100%);
           background-size: 250% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
