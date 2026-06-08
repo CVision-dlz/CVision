@@ -730,7 +730,7 @@ export default function App() {
         }
 
         body {
-          background: #f1f5f9;
+          background: #f8f9fa;
           color: #0f172a;
           font-family: 'DM Sans', sans-serif;
           min-height: 100vh;
@@ -752,7 +752,7 @@ export default function App() {
           z-index: 0;
           background: radial-gradient(
             700px circle at var(--mouse-x) var(--mouse-y),
-            rgba(14,165,233,0.06),
+            rgba(14,165,233,0.03),
             transparent 42%
           );
         }
@@ -763,8 +763,7 @@ export default function App() {
           align-items: center;
           justify-content: space-between;
           border-bottom: 1px solid #e2e8f0;
-          background: rgba(250,249,247,0.92);
-          backdrop-filter: blur(12px);
+          background: #ffffff;
           position: relative;
           z-index: 10;
         }
@@ -784,17 +783,16 @@ export default function App() {
           letter-spacing: 2px;
           text-transform: uppercase;
           color: #0ea5e9;
-          border: 1px solid #bae6fd;
+          border: 1px solid #e2e8f0;
           padding: 6px 16px;
           border-radius: 100px;
-          background: #f0f9ff;
+          background: #ffffff;
         }
 
         /* ── Onglets ── */
         .tabs {
           display: flex;
-          background: rgba(250,249,247,0.92);
-          backdrop-filter: blur(12px);
+          background: #ffffff;
           border-bottom: 1px solid #e2e8f0;
           padding: 0 56px;
           gap: 0;
@@ -880,10 +878,10 @@ export default function App() {
         }
 
         .tab-bg-0 .left {
-          background: linear-gradient(155deg, rgba(14,165,233,0.07) 0%, #ffffff 38%);
+          background: #ffffff;
         }
         .tab-bg-1 .left {
-          background: linear-gradient(155deg, rgba(45,122,79,0.07) 0%, #ffffff 38%);
+          background: #ffffff;
         }
 
         .eyebrow {
@@ -954,7 +952,7 @@ export default function App() {
         .dz-ace-drag {
           border-color: #0ea5e9 !important;
           border-style: dashed;
-          background: #f0f9ff;
+          background: #ffffff;
           box-shadow: 0 0 0 5px rgba(14,165,233,0.09) !important;
         }
 
@@ -1008,7 +1006,7 @@ export default function App() {
         .dz-card-front {
           position: absolute;
           inset: 0;
-          background: linear-gradient(145deg, #fff, #f0f9ff);
+          background: #ffffff;
           border: 1.5px solid #e2e8f0;
           border-radius: 12px;
           display: flex;
@@ -1024,8 +1022,8 @@ export default function App() {
         .dz-card-back {
           position: absolute;
           top: 8px; left: -8px; right: -8px; bottom: -8px;
-          background: #f0f9ff;
-          border: 1.5px solid #e0f2fe;
+          background: #f8f9fa;
+          border: 1.5px solid #e2e8f0;
           border-radius: 12px;
           z-index: 1;
         }
@@ -1127,7 +1125,7 @@ export default function App() {
         .right {
           padding: 72px 64px;
           overflow-y: auto;
-          background: #f1f5f9;
+          background: #f8f9fa;
           position: relative;
         }
 
@@ -1290,7 +1288,7 @@ export default function App() {
         .tag:hover {
           border-color: #0ea5e9;
           color: #0ea5e9;
-          background: #f0f9ff;
+          background: #ffffff;
         }
 
         details summary {
@@ -1472,9 +1470,9 @@ export default function App() {
           position: relative;
           z-index: 1;
           background:
-            linear-gradient(rgba(26,26,26,0.022) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(26,26,26,0.022) 1px, transparent 1px),
-            #f1f5f9;
+            linear-gradient(rgba(0,0,0,0.028) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.028) 1px, transparent 1px),
+            #f8f9fa;
           background-size: 44px 44px;
         }
 
@@ -1504,19 +1502,20 @@ export default function App() {
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        .refresh-btn:hover { background: #f0f9ff; border-color: #0ea5e9; color: #0ea5e9; }
+        .refresh-btn:hover { background: #ffffff; border-color: #0ea5e9; color: #0ea5e9; }
         .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ── Insight RH ── */
         .insight-rh {
-          background: linear-gradient(135deg, rgba(14,165,233,0.07), rgba(14,165,233,0.03));
-          border: 1px solid rgba(14,165,233,0.2);
-          border-radius: 14px;
-          padding: 16px 22px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-left: 3px solid #0ea5e9;
+          border-radius: 10px;
+          padding: 14px 20px;
           margin-bottom: 28px;
           font-size: 13px;
           font-weight: 300;
-          color: #0369a1;
+          color: #475569;
           line-height: 1.7;
           display: flex;
           align-items: center;
@@ -1551,8 +1550,8 @@ export default function App() {
         }
         .kpi-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 16px 40px rgba(26,26,26,0.09);
-          border-color: rgba(14,165,233,0.3);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.08);
+          border-color: rgba(14,165,233,0.4);
         }
         .kpi-card::before {
           content: '';
@@ -1642,7 +1641,7 @@ export default function App() {
           text-transform: uppercase;
           color: #0ea5e9;
           background: none;
-          border: 1px solid #bae6fd;
+          border: 1px solid #e2e8f0;
           border-radius: 100px;
           padding: 4px 12px;
           cursor: pointer;
@@ -1651,7 +1650,7 @@ export default function App() {
           transition: all 0.2s ease;
           white-space: nowrap;
         }
-        .toggle-mode-btn:hover { background: #f0f9ff; border-color: #0ea5e9; }
+        .toggle-mode-btn:hover { background: #ffffff; border-color: #0ea5e9; }
         .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
 
         /* ── Table ── */
@@ -1683,10 +1682,10 @@ export default function App() {
           position: relative;
         }
         .history-row:hover { background: rgba(14,165,233,0.04); }
-        .history-row.expanded { background: #f0f9ff; }
+        .history-row.expanded { background: #ffffff; }
         .history-row td {
           padding: 16px 20px;
-          border-bottom: 1px solid #f1f5f9;
+          border-bottom: 1px solid #f8f9fa;
           font-size: 13px;
           color: #0f172a;
           position: relative;
@@ -1755,7 +1754,7 @@ export default function App() {
           border-radius: 100px;
         }
         .badge-fair { background: #edf7f0; color: #2d7a4f; border: 1px solid #c3e6d0; }
-        .badge-std  { background: #f0f9ff; color: #0ea5e9; border: 1px solid #bae6fd; }
+        .badge-std  { background: #f8f9fa; color: #64748b; border: 1px solid #e2e8f0; }
 
         .decision-pill-sm {
           display: inline-flex;
@@ -1771,7 +1770,7 @@ export default function App() {
         .row-checkbox {
           appearance: none;
           width: 17px; height: 17px;
-          border: 1.5px solid #bae6fd;
+          border: 1.5px solid #e2e8f0;
           border-radius: 5px;
           background: white;
           cursor: pointer;
@@ -1843,7 +1842,7 @@ export default function App() {
 
         /* ── Detail row ── */
         .history-detail-row td {
-          background: #f0f9ff;
+          background: #ffffff;
           padding: 0 20px 16px 20px;
           border-bottom: 1px solid #e2e8f0;
         }
@@ -1862,7 +1861,7 @@ export default function App() {
           align-items: center;
           padding: 4px 0;
           font-size: 12px;
-          border-bottom: 1px solid #f1f5f9;
+          border-bottom: 1px solid #f8f9fa;
         }
         .hf-name { color: #64748b; }
         .hf-val { font-weight: 600; font-size: 12px; }
@@ -1999,7 +1998,7 @@ export default function App() {
         }
         .splash-logo span {
           font-style: italic;
-          background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 35%, #bae6fd 50%, #0ea5e9 65%, #0284c7 100%);
+          background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 35%, #e2e8f0 50%, #0ea5e9 65%, #0284c7 100%);
           background-size: 220% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2056,7 +2055,7 @@ export default function App() {
         /* ── Logo aurora ── */
         .logo-aurora {
           display: inline-block;
-          background: linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 30%, #bae6fd 50%, #7dd3fc 70%, #0ea5e9 100%);
+          background: linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 30%, #e2e8f0 50%, #7dd3fc 70%, #0ea5e9 100%);
           background-size: 250% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
