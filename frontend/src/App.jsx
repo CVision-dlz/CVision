@@ -619,7 +619,7 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
                 <div className="dz-card-back" />
                 <div className="dz-card-front">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                    stroke="#0ea5e9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    stroke="#1d4ed8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="17 8 12 3 7 8"/>
                     <line x1="12" y1="3" x2="12" y2="15"/>
@@ -639,7 +639,7 @@ function Dropzone({ onFile, loading, filename, eyebrow, headline, headlineEm, de
 // ─── App principale ─────────────────────────────────────────────────────────
 export default function App() {
   const [activeTab, setActiveTab] = useState(0)
-  const [showSplash, setShowSplash] = useState(true)
+  const [showSplash, setShowSplash] = useState(false)
 
   const [loading, setLoading]   = useState(false)
   const [result, setResult]     = useState(null)
@@ -845,7 +845,7 @@ export default function App() {
           z-index: 0;
           background: radial-gradient(
             700px circle at var(--mouse-x) var(--mouse-y),
-            rgba(14,165,233,0.03),
+            rgba(29,78,216,0.03),
             transparent 42%
           );
         }
@@ -868,14 +868,14 @@ export default function App() {
           letter-spacing: -0.5px;
         }
 
-        .logo span { color: #0ea5e9; }
+        .logo span { color: #1d4ed8; }
 
         .badge {
           font-size: 11px;
           font-weight: 500;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #0ea5e9;
+          color: #1d4ed8;
           border: 1px solid #e2e8f0;
           padding: 6px 16px;
           border-radius: 100px;
@@ -897,10 +897,10 @@ export default function App() {
           position: absolute;
           bottom: 0;
           height: 2px;
-          background: linear-gradient(90deg, transparent 0%, #0ea5e9 30%, #7dd3fc 50%, #0ea5e9 70%, transparent 100%);
+          background: linear-gradient(90deg, transparent 0%, #1d4ed8 30%, #93c5fd 50%, #1d4ed8 70%, transparent 100%);
           transition: left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
           border-radius: 2px;
-          box-shadow: 0 0 8px rgba(14,165,233,0.4);
+          box-shadow: 0 0 8px rgba(29,78,216,0.4);
         }
 
         .tab-btn {
@@ -936,9 +936,9 @@ export default function App() {
         }
 
         .tab-btn.active .tab-pip {
-          background: #0ea5e9;
+          background: #1d4ed8;
           opacity: 1;
-          box-shadow: 0 0 6px rgba(14,165,233,0.5);
+          box-shadow: 0 0 6px rgba(29,78,216,0.5);
         }
 
         .tab-fair-tag {
@@ -981,7 +981,7 @@ export default function App() {
           font-size: 11px;
           letter-spacing: 3px;
           text-transform: uppercase;
-          color: #0ea5e9;
+          color: #1d4ed8;
           font-weight: 500;
           margin-bottom: 20px;
           display: inline-flex;
@@ -993,7 +993,7 @@ export default function App() {
           display: inline-block;
           width: 28px;
           height: 1px;
-          background: #0ea5e9;
+          background: #1d4ed8;
           margin-left: 10px;
           flex-shrink: 0;
           transform-origin: left;
@@ -1016,7 +1016,7 @@ export default function App() {
 
         .headline em {
           font-style: italic;
-          color: #0ea5e9;
+          color: #1d4ed8;
         }
 
         .desc {
@@ -1039,14 +1039,14 @@ export default function App() {
           transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .dz-ace:hover {
-          border-color: #0ea5e9;
-          box-shadow: 0 0 0 4px rgba(14,165,233,0.06), 0 8px 32px rgba(14,165,233,0.07);
+          border-color: #1d4ed8;
+          box-shadow: 0 0 0 4px rgba(29,78,216,0.06), 0 8px 32px rgba(29,78,216,0.07);
         }
         .dz-ace-drag {
-          border-color: #0ea5e9 !important;
+          border-color: #1d4ed8 !important;
           border-style: dashed;
           background: #ffffff;
-          box-shadow: 0 0 0 5px rgba(14,165,233,0.09) !important;
+          box-shadow: 0 0 0 5px rgba(29,78,216,0.09) !important;
         }
 
         /* Scan line on drag */
@@ -1057,8 +1057,8 @@ export default function App() {
           right: 10%;
           height: 2px;
           top: 0;
-          background: linear-gradient(90deg, transparent, rgba(14,165,233,0.9), transparent);
-          box-shadow: 0 0 14px rgba(14,165,233,0.4);
+          background: linear-gradient(90deg, transparent, rgba(29,78,216,0.9), transparent);
+          box-shadow: 0 0 14px rgba(29,78,216,0.4);
           animation: scanLine 1.1s ease-in-out infinite;
           border-radius: 1px;
           pointer-events: none;
@@ -1110,7 +1110,7 @@ export default function App() {
           transition: box-shadow 0.3s ease;
         }
         .dz-ace:hover .dz-card-front {
-          box-shadow: 0 10px 32px rgba(14,165,233,0.12);
+          box-shadow: 0 10px 32px rgba(29,78,216,0.12);
         }
         .dz-card-back {
           position: absolute;
@@ -1144,7 +1144,7 @@ export default function App() {
         .dz-spin {
           width: 36px; height: 36px;
           border: 2px solid #e2e8f0;
-          border-top-color: #0ea5e9;
+          border-top-color: #1d4ed8;
           border-radius: 50%;
           animation: spin 0.8s linear infinite;
         }
@@ -1186,7 +1186,7 @@ export default function App() {
           color: inherit;
         }
         .dz-step-done .dz-step-icon { color: #2d7a4f; }
-        .dz-step-active .dz-step-icon { color: #0ea5e9; }
+        .dz-step-active .dz-step-icon { color: #1d4ed8; }
 
         .dz-file-display { animation: fileIn 0.45s cubic-bezier(0.16,1,0.3,1); }
         @keyframes fileIn {
@@ -1379,8 +1379,8 @@ export default function App() {
           transition: all 0.2s ease;
         }
         .tag:hover {
-          border-color: #0ea5e9;
-          color: #0ea5e9;
+          border-color: #1d4ed8;
+          color: #1d4ed8;
           background: #ffffff;
         }
 
@@ -1433,15 +1433,15 @@ export default function App() {
           padding: 4px 0;
           transition: background 0.2s ease;
         }
-        .expl-row:hover { background: rgba(14,165,233,0.04); }
+        .expl-row:hover { background: rgba(29,78,216,0.04); }
 
         .expl-decisive {
           animation: decisiveGlow 1.4s ease 0.5s;
         }
         @keyframes decisiveGlow {
-          0%   { background: rgba(14,165,233,0); }
-          30%  { background: rgba(14,165,233,0.10); }
-          100% { background: rgba(14,165,233,0); }
+          0%   { background: rgba(29,78,216,0); }
+          30%  { background: rgba(29,78,216,0.10); }
+          100% { background: rgba(29,78,216,0); }
         }
 
         .expl-name {
@@ -1549,7 +1549,7 @@ export default function App() {
           font-size: 9px;
           letter-spacing: 2.5px;
           text-transform: uppercase;
-          color: #0ea5e9;
+          color: #1d4ed8;
           font-weight: 600;
           margin-bottom: 10px;
           padding-bottom: 6px;
@@ -1595,14 +1595,14 @@ export default function App() {
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        .refresh-btn:hover { background: #ffffff; border-color: #0ea5e9; color: #0ea5e9; }
+        .refresh-btn:hover { background: #ffffff; border-color: #1d4ed8; color: #1d4ed8; }
         .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* ── Insight RH ── */
         .insight-rh {
           background: #ffffff;
           border: 1px solid #e2e8f0;
-          border-left: 3px solid #0ea5e9;
+          border-left: 3px solid #1d4ed8;
           border-radius: 10px;
           padding: 14px 20px;
           margin-bottom: 28px;
@@ -1644,7 +1644,7 @@ export default function App() {
         .kpi-card:hover {
           transform: translateY(-4px);
           box-shadow: 0 16px 40px rgba(0,0,0,0.08);
-          border-color: rgba(14,165,233,0.4);
+          border-color: rgba(29,78,216,0.4);
         }
         .kpi-card::before {
           content: '';
@@ -1710,7 +1710,7 @@ export default function App() {
           transition: border-color 0.2s;
         }
         .search-input::placeholder { color: #94a3b8; }
-        .search-input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.08); }
+        .search-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,0.08); }
         .filter-group { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 100px; overflow: hidden; }
         .filter-btn {
           padding: 8px 16px;
@@ -1732,7 +1732,7 @@ export default function App() {
           font-size: 10px;
           letter-spacing: 1px;
           text-transform: uppercase;
-          color: #0ea5e9;
+          color: #1d4ed8;
           background: none;
           border: 1px solid #e2e8f0;
           border-radius: 100px;
@@ -1743,7 +1743,7 @@ export default function App() {
           transition: all 0.2s ease;
           white-space: nowrap;
         }
-        .toggle-mode-btn:hover { background: #ffffff; border-color: #0ea5e9; }
+        .toggle-mode-btn:hover { background: #ffffff; border-color: #1d4ed8; }
         .impact-label { font-size: 11px; font-weight: 600; text-align: right; white-space: nowrap; }
 
         /* ── Table ── */
@@ -1774,7 +1774,7 @@ export default function App() {
           transition: background 0.15s ease;
           position: relative;
         }
-        .history-row:hover { background: rgba(14,165,233,0.04); }
+        .history-row:hover { background: rgba(29,78,216,0.04); }
         .history-row.expanded { background: #ffffff; }
         .history-row td {
           padding: 16px 20px;
@@ -1790,7 +1790,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #0ea5e9;
+          background: #1d4ed8;
           border-radius: 0 2px 2px 0;
           opacity: 1;
         }
@@ -1799,7 +1799,7 @@ export default function App() {
           position: absolute;
           left: 0; top: 15%; bottom: 15%;
           width: 3px;
-          background: #0ea5e9;
+          background: #1d4ed8;
           border-radius: 0 2px 2px 0;
           opacity: 0;
           transition: opacity 0.2s ease;
@@ -1873,8 +1873,8 @@ export default function App() {
           flex-shrink: 0;
         }
         .row-checkbox:checked {
-          background: #0ea5e9;
-          border-color: #0ea5e9;
+          background: #1d4ed8;
+          border-color: #1d4ed8;
         }
         .row-checkbox:checked::after {
           content: "✓";
@@ -1882,9 +1882,9 @@ export default function App() {
           font-size: 11px;
           line-height: 1;
         }
-        .row-checkbox:hover { border-color: #0ea5e9; }
+        .row-checkbox:hover { border-color: #1d4ed8; }
 
-        .history-row.selected-row { background: rgba(14,165,233,0.05); }
+        .history-row.selected-row { background: rgba(29,78,216,0.05); }
         .history-row.fav-row { background: rgba(251,191,36,0.06); }
 
         /* ── Row action buttons ── */
@@ -1916,7 +1916,7 @@ export default function App() {
         /* ── Bouton comparer ── */
         .compare-btn {
           padding: 10px 22px;
-          background: #0ea5e9;
+          background: #1d4ed8;
           border: none;
           border-radius: 100px;
           font-family: 'DM Sans', sans-serif;
@@ -1928,9 +1928,9 @@ export default function App() {
           margin-left: 12px;
         }
         .compare-btn:hover {
-          background: #0284c7;
+          background: #1e40af;
           transform: translateY(-1px);
-          box-shadow: 0 6px 18px rgba(14,165,233,0.3);
+          box-shadow: 0 6px 18px rgba(29,78,216,0.3);
         }
 
         /* ── Detail row ── */
@@ -1944,7 +1944,7 @@ export default function App() {
           font-size: 10px;
           letter-spacing: 2px;
           text-transform: uppercase;
-          color: #0ea5e9;
+          color: #1d4ed8;
           font-weight: 600;
           margin-bottom: 10px;
         }
@@ -2062,7 +2062,7 @@ export default function App() {
         .splash-bg {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(14,165,233,0.14) 0%, transparent 70%);
+          background: radial-gradient(ellipse 90% 60% at 50% 50%, rgba(29,78,216,0.14) 0%, transparent 70%);
           animation: splashBgPulse 3s ease-in-out infinite;
         }
         .splash-glow {
@@ -2091,7 +2091,7 @@ export default function App() {
         }
         .splash-logo span {
           font-style: italic;
-          background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 35%, #e2e8f0 50%, #0ea5e9 65%, #0284c7 100%);
+          background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 30%, #93c5fd 50%, #1d4ed8 70%, #0f172a 100%);
           background-size: 220% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2148,7 +2148,7 @@ export default function App() {
         /* ── Logo aurora ── */
         .logo-aurora {
           display: inline-block;
-          background: linear-gradient(135deg, #0ea5e9 0%, #7dd3fc 30%, #e2e8f0 50%, #7dd3fc 70%, #0ea5e9 100%);
+          background: linear-gradient(135deg, #1d4ed8 0%, #93c5fd 30%, #e2e8f0 50%, #93c5fd 70%, #1d4ed8 100%);
           background-size: 250% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -2189,23 +2189,32 @@ export default function App() {
         /* ── Mail tab ── */
         .mail-page {
           display: grid;
-          grid-template-columns: 340px 1fr;
+          grid-template-columns: 360px 1fr;
           min-height: calc(100vh - 140px);
-          background: #f8f9fa;
+          background: linear-gradient(135deg, #eff6ff 0%, #f8f9fa 100%);
         }
         .mail-sidebar {
-          border-right: 1px solid #e2e8f0;
+          border-right: 1px solid rgba(29,78,216,0.12);
           display: flex;
           flex-direction: column;
-          background: #ffffff;
+          background: rgba(255,255,255,0.72);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
           overflow: hidden;
         }
         .mail-sidebar-header {
-          padding: 32px 24px 20px;
-          border-bottom: 1px solid #e2e8f0;
+          padding: 24px 18px 14px;
+          border-bottom: 1px solid rgba(29,78,216,0.08);
           flex-shrink: 0;
+          background: rgba(255,255,255,0.5);
         }
-        .mail-list { overflow-y: auto; flex: 1; max-height: calc(100vh - 280px); }
+        .mail-sidebar-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 4px;
+        }
+        .mail-list { overflow-y: auto; flex: 1; max-height: calc(100vh - 300px); }
         .mail-empty {
           padding: 48px 24px;
           text-align: center;
@@ -2217,35 +2226,35 @@ export default function App() {
         .mail-item {
           display: flex;
           gap: 12px;
-          padding: 14px 20px;
-          border-bottom: 1px solid #f1f5f9;
+          padding: 13px 16px;
+          border-bottom: 1px solid rgba(29,78,216,0.05);
           cursor: pointer;
-          transition: background 0.15s ease;
+          transition: all 0.15s ease;
           align-items: flex-start;
           border-left: 3px solid transparent;
         }
-        .mail-item:hover { background: #f8f9fa; }
+        .mail-item:hover { background: rgba(29,78,216,0.04); }
         .mail-item-active {
-          background: #f0f9ff !important;
-          border-left-color: #0ea5e9;
+          background: rgba(29,78,216,0.07) !important;
+          border-left-color: #1d4ed8;
         }
         .mail-item-avatar {
-          width: 38px; height: 38px;
-          border-radius: 50%;
+          width: 40px; height: 40px;
+          border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 12px;
-          font-weight: 600;
+          font-size: 13px;
+          font-weight: 700;
           flex-shrink: 0;
           letter-spacing: 0.5px;
         }
-        .avatar-sel { background: #dcfce7; color: #16a34a; }
-        .avatar-rej { background: #fee2e2; color: #dc2626; }
+        .avatar-sel { background: linear-gradient(135deg, #bbf7d0, #dcfce7); color: #15803d; }
+        .avatar-rej { background: linear-gradient(135deg, #fecaca, #fee2e2); color: #b91c1c; }
         .mail-item-content { flex: 1; min-width: 0; }
-        .mail-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .mail-item-sender { font-size: 13px; font-weight: 500; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
-        .mail-item-date { font-size: 11px; color: #94a3b8; flex-shrink: 0; margin-left: 6px; }
+        .mail-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .mail-item-sender { font-size: 13px; font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 155px; }
+        .mail-item-date { font-size: 10px; color: #94a3b8; flex-shrink: 0; margin-left: 6px; }
         .mail-item-subject { font-size: 12px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
         .mail-item-meta { display: flex; gap: 6px; align-items: center; }
         .decision-pill-sm {
@@ -2255,15 +2264,15 @@ export default function App() {
           padding: 2px 8px;
           border-radius: 100px;
           font-size: 10px;
-          font-weight: 500;
-          letter-spacing: 0.4px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
         }
-        .decision-pill-sm.invite { background: #dcfce7; color: #16a34a; }
-        .decision-pill-sm.reject { background: #fee2e2; color: #dc2626; }
+        .decision-pill-sm.invite { background: #dcfce7; color: #15803d; }
+        .decision-pill-sm.reject { background: #fee2e2; color: #b91c1c; }
         .decision-pill-sm .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
         .mail-detail {
-          padding: 48px 56px;
+          padding: 40px 52px;
           overflow-y: auto;
           max-height: calc(100vh - 140px);
         }
@@ -2271,35 +2280,37 @@ export default function App() {
         /* Mail context card */
         .mail-context-card {
           background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 14px;
-          padding: 22px 26px;
+          border: 1px solid rgba(29,78,216,0.1);
+          border-radius: 16px;
+          padding: 24px 28px;
           margin-bottom: 4px;
+          box-shadow: 0 2px 16px rgba(29,78,216,0.06);
         }
         .mail-from-row {
           display: flex;
           align-items: center;
-          gap: 14px;
-          margin-bottom: 14px;
+          gap: 16px;
+          margin-bottom: 16px;
         }
         .mail-avatar {
-          width: 44px; height: 44px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+          width: 48px; height: 48px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #1d4ed8, #60a5fa);
           color: #fff;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 14px;
-          font-weight: 600;
+          font-size: 15px;
+          font-weight: 700;
           flex-shrink: 0;
+          box-shadow: 0 4px 12px rgba(29,78,216,0.3);
         }
         .mail-from-info { flex: 1; min-width: 0; }
-        .mail-sender-name { font-size: 15px; font-weight: 500; color: #0f172a; }
+        .mail-sender-name { font-size: 16px; font-weight: 600; color: #0f172a; }
         .mail-sender-email { font-size: 12px; color: #94a3b8; margin-top: 2px; }
-        .mail-context-date { font-size: 11px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
-        .mail-subject-line { font-size: 13px; color: #64748b; margin-bottom: 10px; }
-        .mail-subject-label { font-weight: 500; color: #0f172a; }
+        .mail-context-date { font-size: 11px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; text-align: right; line-height: 1.6; }
+        .mail-subject-line { font-size: 13px; color: #64748b; margin-bottom: 12px; padding: 10px 14px; background: #f8f9fa; border-radius: 8px; }
+        .mail-subject-label { font-weight: 600; color: #1d4ed8; }
         .mail-body-details summary {
           font-size: 11px;
           letter-spacing: 1.5px;
@@ -2368,7 +2379,7 @@ export default function App() {
           >
             <div className="tab-pip" />
             Mail
-            <span className="tab-fair-tag" style={{ background: "rgba(14,165,233,0.12)", color: "#0ea5e9" }}>AUTO</span>
+            <span className="tab-fair-tag" style={{ background: "rgba(29,78,216,0.12)", color: "#1d4ed8" }}>AUTO</span>
           </button>
         </nav>
 
@@ -2643,9 +2654,16 @@ export default function App() {
           <div className="mail-page">
             <div className="mail-sidebar">
               <div className="mail-sidebar-header">
-                <div className="history-title">Analyse Mail</div>
-                <div className="history-sub">
-                  {mailHistory.length} CV reçu{mailHistory.length !== 1 ? "s" : ""} par email
+                <div className="mail-sidebar-top">
+                  <div>
+                    <div className="history-title">Analyse Mail</div>
+                    <div className="history-sub">
+                      {mailHistory.length} CV reçu{mailHistory.length !== 1 ? "s" : ""} par email
+                    </div>
+                  </div>
+                  <button className="refresh-btn" onClick={fetchMailHistory} disabled={mailLoading} style={{ flexShrink: 0 }}>
+                    {mailLoading ? "…" : "↻"}
+                  </button>
                 </div>
                 <input
                   className="search-input"
