@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@supabase/supabase-js"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { Target02Icon, BalanceScaleIcon } from "@hugeicons/core-free-icons"
 
 const WEBHOOK_URL      = "https://n8n.dlzteam.com/webhook/process-cv"
 const WEBHOOK_FAIR_URL = "https://n8n.dlzteam.com/webhook/4f470f6b-2ab0-4480-8079-8572d0f4bb7f"
@@ -1273,7 +1275,7 @@ export default function App() {
           text-align: center;
         }
 
-        .empty-icon { font-size: 56px; }
+        .empty-icon { font-size: 56px; display: flex; align-items: center; justify-content: center; color: #a8a29e; }
 
         .empty-text {
           font-family: 'DM Serif Display', serif;
@@ -2470,7 +2472,7 @@ export default function App() {
             <div className="right" key={filename}>
               {!result ? (
                 <div className="empty-state">
-                  <div className="empty-icon">🎯</div>
+                  <div className="empty-icon"><HugeiconsIcon icon={Target02Icon} size={56} strokeWidth={1} /></div>
                   <div className="empty-text">En attente d'un CV</div>
                 </div>
               ) : (
@@ -2497,7 +2499,7 @@ export default function App() {
             <div className="right" key={filenameFair}>
               {!resultFair ? (
                 <div className="empty-state">
-                  <div className="empty-icon">⚖️</div>
+                  <div className="empty-icon"><HugeiconsIcon icon={BalanceScaleIcon} size={56} strokeWidth={1} /></div>
                   <div className="empty-text">En attente d'un CV</div>
                 </div>
               ) : (
