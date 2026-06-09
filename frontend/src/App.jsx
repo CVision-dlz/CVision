@@ -670,6 +670,10 @@ export default function App() {
   const [mailLoading, setMailLoading] = useState(false)
   const [activeMailRow, setActiveMailRow] = useState(null)
   const [mailSearch, setMailSearch] = useState("")
+  const [mailFavorites, setMailFavorites] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("cvision_mail_favorites") || "[]")) }
+    catch { return new Set() }
+  })
 
   // Tab indicator
   const tabRef0 = useRef()
@@ -725,6 +729,28 @@ export default function App() {
       const next = new Set(prev)
       next.delete(id)
       localStorage.setItem("cvision_favorites", JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  function toggleMailFavorite(id) {
+    setMailFavorites(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      localStorage.setItem("cvision_mail_favorites", JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  async function deleteMailRow(id) {
+    await supabase.from("cv_decisions").delete().eq("id", id)
+    setMailHistory(prev => prev.filter(r => r.id !== id))
+    if (activeMailRow?.id === id) setActiveMailRow(null)
+    setMailFavorites(prev => {
+      const next = new Set(prev)
+      next.delete(id)
+      localStorage.setItem("cvision_mail_favorites", JSON.stringify([...next]))
       return next
     })
   }
@@ -830,9 +856,10 @@ export default function App() {
         }
 
         .page {
-          min-height: 100vh;
+          height: 100vh;
           display: grid;
           grid-template-rows: auto auto 1fr;
+          overflow: hidden;
           position: relative;
           background: #f7f6f3;
         }
@@ -906,10 +933,9 @@ export default function App() {
           position: absolute;
           bottom: 0;
           height: 2px;
-          background: linear-gradient(90deg, transparent 0%, #f97316 30%, #fed7aa 50%, #f97316 70%, transparent 100%);
+          background: #f97316;
           transition: left 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
-          border-radius: 2px;
-          box-shadow: 0 0 8px rgba(249,115,22,0.4);
+          border-radius: 1px;
         }
 
         .tab-btn {
@@ -968,15 +994,19 @@ export default function App() {
           grid-template-columns: 480px 1fr;
           position: relative;
           z-index: 1;
+          overflow: hidden;
+          min-height: 0;
         }
 
         .left {
-          padding: 72px 56px;
+          padding: 64px 56px;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: flex-start;
           background: #fdfcfa;
           border-right: 1px solid #dad7cd;
+          overflow-y: auto;
+          min-height: 0;
         }
 
         .tab-bg-0 .left {
@@ -1225,10 +1255,11 @@ export default function App() {
         }
 
         .right {
-          padding: 72px 64px;
+          padding: 64px 64px;
           overflow-y: auto;
           background: #f7f6f3;
           position: relative;
+          min-height: 0;
         }
 
         .empty-state {
@@ -1568,7 +1599,8 @@ export default function App() {
         /* ── Dashboard ── */
         .history-page {
           padding: 48px 64px;
-          min-height: 100%;
+          overflow-y: auto;
+          min-height: 0;
           position: relative;
           z-index: 1;
           background:
@@ -2199,7 +2231,8 @@ export default function App() {
         .mail-page {
           display: grid;
           grid-template-columns: 360px 1fr;
-          min-height: calc(100vh - 140px);
+          overflow: hidden;
+          min-height: 0;
           background: #f7f6f3;
         }
         .mail-sidebar {
@@ -2223,7 +2256,7 @@ export default function App() {
           justify-content: space-between;
           margin-bottom: 4px;
         }
-        .mail-list { overflow-y: auto; flex: 1; max-height: calc(100vh - 300px); }
+        .mail-list { overflow-y: auto; flex: 1; min-height: 0; }
         .mail-empty {
           padding: 48px 24px;
           text-align: center;
@@ -2283,7 +2316,7 @@ export default function App() {
         .mail-detail {
           padding: 40px 52px;
           overflow-y: auto;
-          max-height: calc(100vh - 140px);
+          min-height: 0;
         }
 
         /* Mail context card */
@@ -2341,6 +2374,33 @@ export default function App() {
           max-height: 200px;
           overflow-y: auto;
         }
+
+        /* ── Mail action buttons ── */
+        .mail-item-actions {
+          display: flex;
+          gap: 2px;
+          align-items: center;
+          flex-shrink: 0;
+          opacity: 0;
+          transition: opacity 0.15s ease;
+        }
+        .mail-item:hover .mail-item-actions { opacity: 1; }
+        .mail-item-active .mail-item-actions { opacity: 1; }
+        .mail-act-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 4px 5px;
+          border-radius: 6px;
+          font-size: 13px;
+          line-height: 1;
+          transition: all 0.15s ease;
+          color: #a8a29e;
+        }
+        .mail-act-btn:hover { background: rgba(28,25,23,0.06); }
+        .mail-star-btn.mail-starred { color: #fbbf24; opacity: 1 !important; }
+        .mail-star-btn:hover { color: #fbbf24; }
+        .mail-trash-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
       `}</style>
 
       <div className="page">
@@ -2709,10 +2769,11 @@ export default function App() {
                     const initials = n
                       ? (() => { const p = n.trim().split(" "); return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : p[0].slice(0, 2).toUpperCase() })()
                       : row.sender_email ? row.sender_email.slice(0, 2).toUpperCase() : "??"
+                    const isMailFav = mailFavorites.has(row.id)
                     return (
                       <div
                         key={row.id}
-                        className={`mail-item${isActive ? " mail-item-active" : ""}`}
+                        className={`mail-item${isActive ? " mail-item-active" : ""}${isMailFav ? " fav-row" : ""}`}
                         onClick={() => setActiveMailRow(row)}
                       >
                         <div className={`mail-item-avatar ${isSel ? "avatar-sel" : "avatar-rej"}`}>{initials}</div>
@@ -2730,6 +2791,18 @@ export default function App() {
                               {row.model === "fair" ? "FAIR" : "Standard"}
                             </span>
                           </div>
+                        </div>
+                        <div className="mail-item-actions" onClick={e => e.stopPropagation()}>
+                          <button
+                            className={`mail-act-btn mail-star-btn${isMailFav ? " mail-starred" : ""}`}
+                            onClick={() => toggleMailFavorite(row.id)}
+                            title={isMailFav ? "Retirer des favoris" : "Ajouter aux favoris"}
+                          >★</button>
+                          <button
+                            className="mail-act-btn mail-trash-btn"
+                            onClick={() => deleteMailRow(row.id)}
+                            title="Supprimer"
+                          >🗑</button>
                         </div>
                       </div>
                     )
